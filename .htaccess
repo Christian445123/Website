@@ -1,4 +1,4 @@
-# ─────────────────────────────────────────────
+﻿# ─────────────────────────────────────────────
 # Security & Rewrite Rules – Chris_Gaming445
 # ─────────────────────────────────────────────
 
@@ -43,7 +43,7 @@
 </IfModule>
 
 # ── Hide server signature ─────────────────────
-ServerSignature Off
+# ServerSignature Off  <- server-level directive, not allowed in .htaccess
 
 # ── Disable directory listing ─────────────────
 Options -Indexes
