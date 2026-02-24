@@ -62,14 +62,22 @@ function auth_user(): ?array
 
     // Lazy-load from DB on first call within the request
     if (!isset($_SESSION['_user_data'])) {
-        $stmt = db()->prepare(
-            'SELECT `id`, `username`, `email`, `role`
-             FROM `users`
-             WHERE `id` = ? AND `is_active` = 1
-             LIMIT 1'
-        );
-        $stmt->execute([$_SESSION['user_id']]);
-        $row = $stmt->fetch();
+        $pdo = db();
+        if ($pdo === null) {
+            return null;
+        }
+        try {
+            $stmt = $pdo->prepare(
+                'SELECT `id`, `username`, `email`, `role`
+                 FROM `users`
+                 WHERE `id` = ? AND `is_active` = 1
+                 LIMIT 1'
+            );
+            $stmt->execute([$_SESSION['user_id']]);
+            $row = $stmt->fetch();
+        } catch (Throwable) {
+            return null;
+        }
 
         if ($row === false) {
             // User was deleted / deactivated – force logout
@@ -144,14 +152,23 @@ function auth_login(string $username, string $password): bool
         return false;
     }
 
-    $stmt = db()->prepare(
-        'SELECT `id`, `password_hash`, `role`, `is_active`
-         FROM `users`
-         WHERE `username` = ?
-         LIMIT 1'
-    );
-    $stmt->execute([trim($username)]);
-    $row = $stmt->fetch();
+    $pdo = db();
+    if ($pdo === null) {
+        return false;
+    }
+
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT `id`, `password_hash`, `role`, `is_active`
+             FROM `users`
+             WHERE `username` = ?
+             LIMIT 1'
+        );
+        $stmt->execute([trim($username)]);
+        $row = $stmt->fetch();
+    } catch (Throwable) {
+        return false;
+    }
 
     if ($row === false || !(bool) $row['is_active']) {
         // Constant-time dummy verify to prevent timing attacks
@@ -170,8 +187,12 @@ function auth_login(string $username, string $password): bool
     unset($_SESSION['_user_data']); // force fresh DB load on auth_user()
 
     // Update last_login timestamp
-    db()->prepare('UPDATE `users` SET `last_login` = NOW() WHERE `id` = ?')
-        ->execute([$row['id']]);
+    try {
+        db()?->prepare('UPDATE `users` SET `last_login` = NOW() WHERE `id` = ?')
+            ->execute([$row['id']]);
+    } catch (Throwable) {
+        // non-critical, ignore
+    }
 
     return true;
 }

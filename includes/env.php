@@ -25,7 +25,8 @@ declare(strict_types=1);
     $envFile = dirname(__DIR__) . '/.env';
 
     if (!is_file($envFile)) {
-        throw new RuntimeException('.env file not found at: ' . $envFile);
+        // .env fehlt – kein fataler Fehler, weiter mit Defaults
+        return;
     }
 
     $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
