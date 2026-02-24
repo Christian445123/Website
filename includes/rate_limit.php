@@ -178,7 +178,7 @@ function rate_limit_check(): void
 /**
  * Sendet HTTP 429, loggt den Event in DB + Discord und beendet die Ausführung.
  */
-function rl_send_429(string $ip): never
+function rl_send_429(string $ip): void
 {
     // Activity-Log: Rate-Limit-Treffer mit realer IP
     cg_log(LOG_RATE_LIMIT_HIT, [
