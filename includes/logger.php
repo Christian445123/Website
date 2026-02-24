@@ -357,7 +357,7 @@ function cg_php_errno_to_event(int $errno): string
             => LOG_PHP_WARNING,
         (bool) ($errno & (E_DEPRECATED | E_USER_DEPRECATED))
             => LOG_PHP_DEPRECATED,
-        (bool) ($errno & E_STRICT)
+        (bool) ($errno & 2048)  // 2048 = E_STRICT (removed in PHP 8.4)
             => LOG_PHP_STRICT,
         default
             => LOG_PHP_NOTICE,
