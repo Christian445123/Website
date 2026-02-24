@@ -19,6 +19,15 @@ $pageDescription = $pageDescription ?? 'Die offizielle Website von Chris_Gaming4
   <link rel="shortcut icon" href="assets/images/cg-logo-neu.png-496x496.png" type="image/x-icon">
   <title><?= htmlspecialchars($pageTitle) ?> | Chris_Gaming445</title>
 
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q5C4N8B4VQ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-Q5C4N8B4VQ');
+  </script>
+
   <!-- Bootstrap -->
   <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
   <!-- Google Fonts -->
