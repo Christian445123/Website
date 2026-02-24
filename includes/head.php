@@ -23,11 +23,6 @@ $pageDescription = $pageDescription ?? 'Die offizielle Website von Chris_Gaming4
   <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
   <!-- Animate.css -->
   <link rel="stylesheet" href="assets/animatecss/animate.css">
-  <!-- Socicon -->
-  <link rel="stylesheet" href="assets/socicon/css/styles.css">
-  <!-- Mobirise Icons -->
-  <link rel="stylesheet" href="assets/web/assets/mobirise-icons/mobirise-icons.css">
-  <link rel="stylesheet" href="assets/web/assets/mobirise-icons2/mobirise2.css">
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
