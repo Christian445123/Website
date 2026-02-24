@@ -48,8 +48,10 @@
         <div class="mt-3">
           <h6 class="cg-footer-heading">RECHTLICHES</h6>
           <ul class="cg-footer-list">
+            <li><a href="hinweise.php">Allgemeine Hinweise</a></li>
             <li><a href="impressum.php">Impressum</a></li>
             <li><a href="datenschutz.php">Datenschutzerklärung</a></li>
+            <li><a href="dsgvo.php">Ihre DSGVO-Rechte</a></li>
           </ul>
         </div>
       </div>
@@ -60,7 +62,12 @@
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
       <p class="cg-footer-copy mb-0">&copy; <?= date('Y') ?> Chris_Gaming445. Alle Rechte vorbehalten.</p>
-      <p class="cg-footer-copy mb-0 text-muted" style="font-size:.75rem;">Made with ❤️ in Tirol</p>
+      <div class="d-flex flex-wrap gap-3">
+        <a href="hinweise.php"    class="cg-footer-copy" style="color:var(--cg-muted);text-decoration:none;font-size:.8rem;">Hinweise</a>
+        <a href="impressum.php"   class="cg-footer-copy" style="color:var(--cg-muted);text-decoration:none;font-size:.8rem;">Impressum</a>
+        <a href="datenschutz.php" class="cg-footer-copy" style="color:var(--cg-muted);text-decoration:none;font-size:.8rem;">Datenschutz</a>
+        <a href="dsgvo.php"       class="cg-footer-copy" style="color:var(--cg-muted);text-decoration:none;font-size:.8rem;">DSGVO-Rechte</a>
+      </div>
     </div>
   </div>
 </footer>
