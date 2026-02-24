@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle       = 'Datenschutzerklärung';
 $pageDescription = 'Datenschutzerklärung der Website Chris_Gaming445.';
 require_once __DIR__ . '/includes/head.php';

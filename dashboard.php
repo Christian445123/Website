@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'Dashboard';
 require_once __DIR__ . '/includes/head.php';
 

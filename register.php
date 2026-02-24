@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $pageTitle = 'Registrieren';
 require_once __DIR__ . '/includes/head.php';
 
