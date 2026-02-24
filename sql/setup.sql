@@ -101,6 +101,8 @@ CREATE TABLE IF NOT EXISTS `announcements` (
 --   Admin User:  admin.user.activated, .deactivated, .role_changed, .deleted, .verified
 --   Admin Proj:  admin.project.created, .updated, .deleted, .toggled
 --   Admin Ann:   admin.announcement.created, .updated, .deleted, .toggled
+--   PHP Runtime: php.fatal, php.exception, php.error, php.warning, php.notice,
+--                php.deprecated, php.strict
 CREATE TABLE IF NOT EXISTS `activity_log` (
     `id`         BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
     `event`      VARCHAR(64)      NOT NULL                       COMMENT 'Event-Konstantenname (z.B. login.success)',
