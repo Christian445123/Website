@@ -40,13 +40,15 @@ function isActive(string $page, string $current): string {
         </li>
         <li class="nav-item dropdown">
           <a class="cg-nav-link dropdown-toggle
-              <?= in_array($currentPage, ['impressum.php','datenschutz.php']) ? 'active' : '' ?>"
+              <?= in_array($currentPage, ['impressum.php','datenschutz.php','hinweise.php','dsgvo.php']) ? 'active' : '' ?>"
              href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Rechtliches
           </a>
           <ul class="dropdown-menu cg-dropdown">
+            <li><a class="dropdown-item cg-dropdown-item <?= isActive('hinweise.php',    $currentPage) ?>" href="hinweise.php">Allgemeine Hinweise</a></li>
             <li><a class="dropdown-item cg-dropdown-item <?= isActive('impressum.php',   $currentPage) ?>" href="impressum.php">Impressum</a></li>
             <li><a class="dropdown-item cg-dropdown-item <?= isActive('datenschutz.php', $currentPage) ?>" href="datenschutz.php">Datenschutzerklärung</a></li>
+            <li><a class="dropdown-item cg-dropdown-item <?= isActive('dsgvo.php',       $currentPage) ?>" href="dsgvo.php">Ihre DSGVO-Rechte</a></li>
           </ul>
         </li>
         <li class="nav-item ms-2">
@@ -54,24 +56,19 @@ function isActive(string $page, string $current): string {
             <i class="fab fa-discord me-1"></i>Discord
           </a>
         </li>
+        <?php if (auth_check()): ?>
+        <li class="nav-item">
+          <a class="cg-nav-link <?= isActive('dashboard.php', $currentPage) ?>" href="/dashboard.php">
+            <i class="fas fa-user-circle me-1"></i>Dashboard
+          </a>
+        </li>
+        <?php endif; ?>
         <!-- Login / User -->
-        <li class="nav-item ms-1 cg-user-dropdown">
+        <li class="nav-item ms-1">
           <?php if (auth_check()): ?>
-            <?php $__u = auth_user(); ?>
-            <div class="dropdown">
-              <button class="cg-btn-user dropdown-toggle" type="button"
-                      data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fas fa-user-circle"></i>
-                <?= htmlspecialchars($__u['username'] ?? 'Account') ?>
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <?php if (($__u['role'] ?? '') === 'admin'): ?>
-                <li><a class="dropdown-item" href="/admin.php"><i class="fas fa-tools me-2"></i>Admin</a></li>
-                <li><hr class="dropdown-divider" style="border-color:rgba(255,255,255,.1)"></li>
-                <?php endif; ?>
-                <li><a class="dropdown-item text-danger" href="/logout.php"><i class="fas fa-sign-out-alt me-2"></i>Abmelden</a></li>
-              </ul>
-            </div>
+            <a class="cg-btn-login" href="/logout.php">
+              <i class="fas fa-sign-out-alt"></i>Logout
+            </a>
           <?php else: ?>
             <a class="cg-btn-login" href="/login.php">
               <i class="fas fa-sign-in-alt"></i>Login
@@ -115,6 +112,19 @@ function isActive(string $page, string $current): string {
       <li class="nav-item">
         <a class="cg-nav-link <?= isActive('datenschutz.php', $currentPage) ?>" href="datenschutz.php">Datenschutzerklärung</a>
       </li>
+      <li class="nav-item">
+        <a class="cg-nav-link <?= isActive('hinweise.php', $currentPage) ?>" href="hinweise.php">Allg. Hinweise</a>
+      </li>
+      <li class="nav-item">
+        <a class="cg-nav-link <?= isActive('dsgvo.php', $currentPage) ?>" href="dsgvo.php">DSGVO-Rechte</a>
+      </li>
+      <?php if (auth_check()): ?>
+      <li class="nav-item">
+        <a class="cg-nav-link <?= isActive('dashboard.php', $currentPage) ?>" href="/dashboard.php">
+          <i class="fas fa-user-circle me-1"></i>Dashboard
+        </a>
+      </li>
+      <?php endif; ?>
     </ul>
 
     <div class="mt-auto">
