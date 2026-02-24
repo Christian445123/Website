@@ -23,21 +23,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo !== null) {
                 $pdo->prepare(
                     'INSERT INTO `announcements` (`title`,`body`,`author_id`,`is_active`) VALUES (?,?,?,1)'
                 )->execute([$title, $body, auth_user()['id']]);
+                cg_log(LOG_ADMIN_ANN_CREATED, ['title' => $title]);
                 $message = 'Ankündigung erstellt.';
             } else {
                 $id = (int) ($_POST['id'] ?? 0);
                 $pdo->prepare(
                     'UPDATE `announcements` SET `title`=?,`body`=? WHERE `id`=?'
                 )->execute([$title, $body, $id]);
+                cg_log(LOG_ADMIN_ANN_UPDATED, ['id' => $id, 'title' => $title]);
                 $message = 'Ankündigung aktualisiert.';
             }
         } elseif ($action === 'toggle') {
             $id = (int) ($_POST['id'] ?? 0);
             $pdo->prepare('UPDATE `announcements` SET `is_active`=1-`is_active` WHERE `id`=?')->execute([$id]);
+            cg_log(LOG_ADMIN_ANN_TOGGLED, ['id' => $id]);
             $message = 'Status geändert.';
         } elseif ($action === 'delete') {
             $id = (int) ($_POST['id'] ?? 0);
+            $tRow = $pdo->prepare('SELECT `title` FROM `announcements` WHERE `id`=?');
+            $tRow->execute([$id]);
+            $tTitle = $tRow->fetchColumn();
             $pdo->prepare('DELETE FROM `announcements` WHERE `id`=?')->execute([$id]);
+            cg_log(LOG_ADMIN_ANN_DELETED, ['id' => $id, 'title' => $tTitle ?: '']);
             $message = 'Ankündigung gelöscht.';
         }
     } catch (Throwable $e) {

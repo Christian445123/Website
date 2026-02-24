@@ -18,7 +18,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo !== null) {
             $message = 'Du kannst deinen eigenen Account nicht bearbeiten.';
             $msgType = 'warning';
         } elseif ($action === 'toggle_active') {
+            // Status vor Toggle lesen, dann toggeln, dann korrekt loggen
+            $cur = $pdo->prepare('SELECT `is_active`, `username` FROM `users` WHERE `id` = ?');
+            $cur->execute([$uid]);
+            $curRow  = $cur->fetch();
             $pdo->prepare('UPDATE `users` SET `is_active` = 1 - `is_active` WHERE `id` = ?')->execute([$uid]);
+            $newActive = !(bool) ($curRow['is_active'] ?? false);
+            cg_log(
+                $newActive ? LOG_ADMIN_USER_ACTIVATED : LOG_ADMIN_USER_DEACTIVATED,
+                ['target_id' => $uid, 'target_user' => $curRow['username'] ?? '']
+            );
             $message = 'Status wurde geändert.';
         } elseif ($action === 'set_role') {
             $role = (string) ($_POST['role'] ?? '');
@@ -26,14 +35,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo !== null) {
                 $message = 'Ungültige Rolle.';
                 $msgType = 'danger';
             } else {
+                $tRow = $pdo->prepare('SELECT `username`, `role` FROM `users` WHERE `id` = ?');
+                $tRow->execute([$uid]);
+                $tData = $tRow->fetch();
                 $pdo->prepare('UPDATE `users` SET `role` = ? WHERE `id` = ?')->execute([$role, $uid]);
+                cg_log(LOG_ADMIN_USER_ROLE, [
+                    'target_id'   => $uid,
+                    'target_user' => $tData['username'] ?? '',
+                    'old_role'    => $tData['role'] ?? '',
+                    'new_role'    => $role,
+                ]);
                 $message = 'Rolle wurde aktualisiert.';
             }
         } elseif ($action === 'delete') {
+            $tRow = $pdo->prepare('SELECT `username`, `email` FROM `users` WHERE `id` = ?');
+            $tRow->execute([$uid]);
+            $tData = $tRow->fetch();
             $pdo->prepare('DELETE FROM `users` WHERE `id` = ?')->execute([$uid]);
+            cg_log(LOG_ADMIN_USER_DELETED, [
+                'target_id'   => $uid,
+                'target_user' => $tData['username'] ?? '',
+                'email'       => $tData['email'] ?? '',
+            ]);
             $message = 'Benutzer wurde gelöscht.';
         } elseif ($action === 'verify') {
+            $tRow = $pdo->prepare('SELECT `username` FROM `users` WHERE `id` = ?');
+            $tRow->execute([$uid]);
+            $targetUser = $tRow->fetchColumn();
             $pdo->prepare('UPDATE `users` SET `email_verified`=1, `is_active`=1, `email_verify_token`=NULL WHERE `id`=?')->execute([$uid]);
+            cg_log(LOG_ADMIN_USER_VERIFIED, ['target_id' => $uid, 'target_user' => $targetUser ?: '']);
             $message = 'E-Mail manuell verifiziert &amp; Account aktiviert.';
         }
     } catch (Throwable $e) {

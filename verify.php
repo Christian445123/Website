@@ -12,6 +12,10 @@ $token   = trim((string) ($_GET['token'] ?? ''));
 $status  = 'invalid'; // 'invalid' | 'expired' | 'already' | 'success'
 $username = '';
 
+if ($token === '' || strlen($token) !== 64 || !ctype_xdigit($token)) {
+    cg_log(LOG_VERIFY_FAILED, ['reason' => 'invalid_token_format', 'token_len' => strlen($token)]);
+}
+
 if ($token !== '' && strlen($token) === 64 && ctype_xdigit($token)) {
     $pdo = db();
 
@@ -30,6 +34,7 @@ if ($token !== '' && strlen($token) === 64 && ctype_xdigit($token)) {
                 if ((bool) $row['email_verified']) {
                     $status   = 'already';
                     $username = $row['username'];
+                    cg_log(LOG_VERIFY_ALREADY, ['username' => $username], (int) $row['id']);
                 } else {
                     // Token valid for 24 hours
                     $createdAt = new DateTimeImmutable($row['created_at']);
@@ -38,6 +43,7 @@ if ($token !== '' && strlen($token) === 64 && ctype_xdigit($token)) {
 
                     if ($now > $expires) {
                         $status = 'expired';
+                        cg_log(LOG_VERIFY_EXPIRED, ['username' => $row['username']], (int) $row['id']);
                     } else {
                         // Activate the account
                         $upd = $pdo->prepare(
@@ -50,11 +56,16 @@ if ($token !== '' && strlen($token) === 64 && ctype_xdigit($token)) {
                         $upd->execute([$row['id']]);
                         $status   = 'success';
                         $username = $row['username'];
+                        cg_log(LOG_VERIFY_SUCCESS, ['username' => $username], (int) $row['id']);
                     }
                 }
+            } else {
+                // Token-Format korrekt, aber nicht in der DB gefunden
+                cg_log(LOG_VERIFY_FAILED, ['reason' => 'token_not_found', 'token_preview' => substr($token, 0, 8) . '...']);
             }
         } catch (Throwable) {
             $status = 'invalid';
+            cg_log(LOG_VERIFY_FAILED, ['token_preview' => substr($token, 0, 8) . '...']);
         }
     }
 }

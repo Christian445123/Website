@@ -25,6 +25,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/logger.php'; // Activity Logger
 
 // ── Session bootstrap ─────────────────────────────────────────────
 if (session_status() === PHP_SESSION_NONE) {
@@ -81,6 +82,7 @@ function auth_user(): ?array
 
         if ($row === false) {
             // User was deleted / deactivated – force logout
+            cg_log(LOG_SESSION_EXPIRED, ['user_id' => $_SESSION['user_id'] ?? null]);
             auth_logout();
             return null;
         }
@@ -123,11 +125,16 @@ function auth_require_role(string $requiredRole): void
     $required  = $hierarchy[$requiredRole]  ?? 99;
 
     if ($userLevel < $required) {
+        cg_log(LOG_ACCESS_DENIED, [
+            'required_role' => $requiredRole,
+            'user_role'     => $user['role'] ?? 'unknown',
+            'url'           => $_SERVER['REQUEST_URI'] ?? '',
+        ]);
         http_response_code(403);
         exit(
             '<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>403</title></head>' .
             '<body style="font-family:sans-serif;text-align:center;padding:4rem">' .
-            '<h1>403 – Zugriff verweigert</h1>' .
+            '<h1>403 &ndash; Zugriff verweigert</h1>' .
             '<p>Du hast keine Berechtigung, diese Seite aufzurufen.</p>' .
             '</body></html>'
         );
@@ -169,18 +176,22 @@ function auth_login(string $username, string $password): bool|string
     if ($row === false) {
         // Constant-time dummy verify to prevent timing attacks
         password_verify($password, '$2y$12$invaliddummyhashXXXXXXXXXXXXXXXXXXXXXXXX');
+        cg_log(LOG_LOGIN_FAILED, ['username' => $username, 'reason' => 'user_not_found']);
         return 'Benutzername oder Passwort falsch.';
     }
 
     if (!password_verify($password, $row['password_hash'])) {
+        cg_log(LOG_LOGIN_FAILED, ['username' => $username, 'reason' => 'wrong_password'], (int) $row['id']);
         return 'Benutzername oder Passwort falsch.';
     }
 
     if (!(bool) $row['email_verified']) {
+        cg_log(LOG_LOGIN_UNVERIFIED, ['username' => $username], (int) $row['id']);
         return 'Bitte bestätige zuerst deine E-Mail-Adresse. Schau in dein Postfach!';
     }
 
     if (!(bool) $row['is_active']) {
+        cg_log(LOG_LOGIN_INACTIVE, ['username' => $username], (int) $row['id']);
         return 'Dein Account ist deaktiviert. Bitte kontaktiere uns.';
     }
 
@@ -197,6 +208,8 @@ function auth_login(string $username, string $password): bool|string
     } catch (Throwable) {
         // non-critical, ignore
     }
+
+    cg_log(LOG_LOGIN_SUCCESS, ['username' => $username, 'role' => $row['role']], (int) $row['id']);
 
     return true;
 }
@@ -330,6 +343,7 @@ function auth_register(string $firstName, string $lastName, string $email): arra
         $stmt = $pdo->prepare('SELECT `id` FROM `users` WHERE `email` = ? LIMIT 1');
         $stmt->execute([$email]);
         if ($stmt->fetch() !== false) {
+            cg_log(LOG_REGISTER_EMAIL_TAKEN, ['email' => $email]);
             return 'Diese E-Mail-Adresse ist bereits registriert.';
         }
 
@@ -347,11 +361,18 @@ function auth_register(string $firstName, string $lastName, string $email): arra
         );
         $insert->execute([$username, $firstName, $lastName, $email, $token, $hash]);
 
-    } catch (\Throwable) {
+    } catch (\Throwable $e) {
+        cg_log(LOG_REGISTER_FAILED, ['email' => $email, 'error' => $e->getMessage()]);
         return 'Registrierung fehlgeschlagen. Bitte später erneut versuchen.';
     }
 
     $emailSent = auth_send_verify_email($email, $firstName, $username, $password, $token);
+
+    cg_log(LOG_REGISTER_SUCCESS, [
+        'username'   => $username,
+        'email'      => $email,
+        'email_sent' => $emailSent ? 'yes' : 'no',
+    ]);
 
     return [
         'username'   => $username,
@@ -366,6 +387,11 @@ function auth_register(string $firstName, string $lastName, string $email): arra
  */
 function auth_logout(string $redirectTo = ''): void
 {
+    // Log before clearing session
+    if (isset($_SESSION['user_id'])) {
+        cg_log(LOG_LOGOUT, [], (int) $_SESSION['user_id'], webhook: false);
+    }
+
     $_SESSION = [];
 
     if (ini_get('session.use_cookies')) {

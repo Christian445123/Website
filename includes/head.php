@@ -1,7 +1,7 @@
 <?php
-// Boot order: env → db → rate_limit → auth
-// rate_limit.php already requires db.php, which requires env.php
-require_once __DIR__ . '/rate_limit.php';  // DB-backed rate limiting
+// Boot order: env → db → logger → rate_limit → auth
+// rate_limit.php requires logger.php + db.php (which requires env.php)
+require_once __DIR__ . '/rate_limit.php';  // DB-backed rate limiting (lädt auch logger.php)
 require_once __DIR__ . '/auth.php';        // Session bootstrap + login helpers
 
 // $pageTitle should be set before including this file

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * CG Rate Limiter  (DB-backed + automatischer Datei-Fallback)
  * -------------------------------------------------------------
@@ -8,23 +8,22 @@
  *           Die Website bleibt in jedem Fall online.
  *
  * Limits:
- *   - 30 Requests pro 60 Sekunden  (Burst-Schutz)
- *   - 200 Requests pro 3600 Sekunden (Stunden-Cap)
+ *   - 150 Requests pro 30 Minuten (gleitendes Fenster)
+ *   - Bei Überschreitung: 30 Minuten Sperre + Activity-Log + Discord Webhook
  */
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/db.php'; // lädt auch env.php
+require_once __DIR__ . '/db.php';      // lädt auch env.php
+require_once __DIR__ . '/logger.php';  // Activity Logger
 
-// ── Konfiguration ──────────────────────────────────────────────
-const RL_DIR           = __DIR__ . '/../tmp/'; // Datei-Fallback-Verzeichnis
-const RL_LIMIT_MINUTE  = 30;                   // max Requests pro Minute
-const RL_LIMIT_HOUR    = 200;                  // max Requests pro Stunde
-const RL_WINDOW_MINUTE = 60;                   // Sekunden
-const RL_WINDOW_HOUR   = 3600;                 // Sekunden
-const RL_CLEANUP_PROB  = 5;                    // % Wahrscheinlichkeit für GC
+//  Konfiguration 
+const RL_DIR       = __DIR__ . '/../tmp/'; // Datei-Fallback-Verzeichnis
+const RL_LIMIT     = 150;                  // max Requests pro Zeitfenster
+const RL_WINDOW    = 1800;                 // Zeitfenster: 30 Minuten (Sekunden)
+const RL_CLEANUP_PROB = 5;                 // % Wahrscheinlichkeit für GC
 
-// ── Helpers ─────────────────────────────────────────────────────
+//  Helpers 
 
 /**
  * Returns the visitor's real IP, honouring common proxy headers
@@ -51,7 +50,7 @@ function rl_get_ip(): string
 }
 
 /**
- * Returns a SHA-256 hash of the IP (rohe IPs werden nie gespeichert).
+ * Returns a SHA-256 hash of the IP.
  */
 function rl_hash_ip(string $ip): string
 {
@@ -59,8 +58,7 @@ function rl_hash_ip(string $ip): string
 }
 
 /**
- * DB-Garbage-Collection: löscht Zeilen älter als 2 h.
- * Gibt bei jedem Fehler stillschweigend auf.
+ * DB-Garbage-Collection: löscht Zeilen älter als 2  RL_WINDOW.
  */
 function rl_garbage_collect(): void
 {
@@ -71,18 +69,18 @@ function rl_garbage_collect(): void
             return;
         }
         $pdo->prepare('DELETE FROM `rate_limit` WHERE `requested_at` < ?')
-            ->execute([time() - (RL_WINDOW_HOUR * 2)]);
+            ->execute([time() - (RL_WINDOW * 2)]);
     } catch (Throwable) {
-        rl_gc_files(); // Fallback: Dateien aufräumen
+        rl_gc_files();
     }
 }
 
 /**
- * Datei-basierte Garbage-Collection: entfernt veraltete JSON-Dateien.
+ * Datei-basierte Garbage-Collection.
  */
 function rl_gc_files(): void
 {
-    $threshold = time() - (RL_WINDOW_HOUR * 2);
+    $threshold = time() - (RL_WINDOW * 2);
     foreach (glob(RL_DIR . 'rl_*.json') ?: [] as $file) {
         if (filemtime($file) < $threshold) {
             @unlink($file);
@@ -90,44 +88,42 @@ function rl_gc_files(): void
     }
 }
 
-// ── Main check ──────────────────────────────────────────────────
+//  Main check 
 
 /**
- * Prüft das Rate-Limit gegen die Datenbank.
- * Gibt true zurück wenn erfolgreich, false wenn DB nicht nutzbar
- * (fehlende Verbindung ODER fehlende Tabelle).
+ * Prüft das Rate-Limit gegen die Datenbank (30-Minuten-Fenster).
+ * Speichert die echte IP und den IP-Hash.
+ * Gibt true zurück wenn erfolgreich, false bei DB-Fehler ( Datei-Fallback).
  */
-function rl_check_db(string $ipHash, int $now): bool
+function rl_check_db(string $ip, int $now): bool
 {
+    $ipHash = rl_hash_ip($ip);
+
     try {
         $pdo = db();
         if ($pdo === null) {
             return false;
         }
 
-        // Minuten-Fenster zählen
+        // 30-Minuten-Fenster zählen
         $s = $pdo->prepare(
             'SELECT COUNT(*) FROM `rate_limit` WHERE `ip_hash` = ? AND `requested_at` > ?'
         );
-        $s->execute([$ipHash, $now - RL_WINDOW_MINUTE]);
-        if ((int) $s->fetchColumn() >= RL_LIMIT_MINUTE) {
-            rl_send_429(RL_WINDOW_MINUTE);
+        $s->execute([$ipHash, $now - RL_WINDOW]);
+
+        if ((int) $s->fetchColumn() >= RL_LIMIT) {
+            rl_send_429($ip);
         }
 
-        // Stunden-Fenster zählen
-        $s->execute([$ipHash, $now - RL_WINDOW_HOUR]);
-        if ((int) $s->fetchColumn() >= RL_LIMIT_HOUR) {
-            rl_send_429(RL_WINDOW_HOUR);
-        }
-
-        // Request protokollieren
-        $pdo->prepare('INSERT INTO `rate_limit` (`ip_hash`, `requested_at`) VALUES (?, ?)')
-            ->execute([$ipHash, $now]);
+        // Request protokollieren (IP + Hash)
+        $pdo->prepare(
+            'INSERT INTO `rate_limit` (`ip`, `ip_hash`, `requested_at`) VALUES (?, ?, ?)'
+        )->execute([$ip, $ipHash, $now]);
 
         return true;
     } catch (Throwable $e) {
         error_log('[CG] rate_limit DB error: ' . $e->getMessage());
-        return false; // Fallback auf Datei-Limiter
+        return false;
     }
 }
 
@@ -148,15 +144,13 @@ function rl_check_file(string $ip, int $now): void
         $log = is_array($raw) ? $raw : [];
     }
 
-    $log = array_values(array_filter(
-        $log, static fn(int $t) => $t > ($now - RL_WINDOW_HOUR)
-    ));
+    // Altes Fenster herausfiltern
+    $log   = array_values(array_filter($log, static fn(int $t) => $t > ($now - RL_WINDOW)));
+    $count = count($log);
 
-    $minuteCount = count(array_filter($log, static fn(int $t) => $t > ($now - RL_WINDOW_MINUTE)));
-    $hourCount   = count($log);
-
-    if ($minuteCount >= RL_LIMIT_MINUTE) { rl_send_429(RL_WINDOW_MINUTE); }
-    if ($hourCount   >= RL_LIMIT_HOUR)   { rl_send_429(RL_WINDOW_HOUR);   }
+    if ($count >= RL_LIMIT) {
+        rl_send_429($ip);
+    }
 
     $log[] = $now;
     $tmp   = $path . '.tmp';
@@ -165,8 +159,7 @@ function rl_check_file(string $ip, int $now): void
 }
 
 /**
- * Hauptfunktion – wird bei jedem Seitenaufruf ausgeführt.
- * Versucht DB, fällt bei Fehler automatisch auf Dateien zurück.
+ * Hauptfunktion  wird bei jedem Seitenaufruf ausgeführt.
  */
 function rate_limit_check(): void
 {
@@ -177,33 +170,33 @@ function rate_limit_check(): void
         rl_garbage_collect();
     }
 
-    // DB probieren; bei Fehler Datei-Fallback
-    if (!rl_check_db(rl_hash_ip($ip), $now)) {
+    if (!rl_check_db($ip, $now)) {
         rl_check_file($ip, $now);
     }
 }
 
 /**
- * Sends a 429 Too Many Requests response and renders a friendly page.
- * Terminates execution afterwards.
+ * Sendet HTTP 429, loggt den Event in DB + Discord und beendet die Ausführung.
  */
-function rl_send_429(int $retry_after): never
+function rl_send_429(string $ip): never
 {
-    http_response_code(429);
-    header('Retry-After: ' . $retry_after);
-    header('Content-Type: text/html; charset=UTF-8');
+    // Activity-Log: Rate-Limit-Treffer mit realer IP
+    cg_log(LOG_RATE_LIMIT_HIT, [
+        'window_seconds' => RL_WINDOW,
+        'limit'          => RL_LIMIT,
+        'retry_after'    => RL_WINDOW,
+    ], null, $ip, webhook: true);
 
-    $minutes = (int) ceil($retry_after / 60);
-    $msg = $retry_after <= 60
-        ? 'Bitte warte kurz und lade die Seite erneut.'
-        : "Bitte versuche es in ca. {$minutes} Minute" . ($minutes !== 1 ? 'n' : '') . " erneut.";
+    http_response_code(429);
+    header('Retry-After: ' . RL_WINDOW);
+    header('Content-Type: text/html; charset=UTF-8');
     ?>
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>429 – Zu viele Anfragen | Chris_Gaming445</title>
+  <title>429  Zu viele Anfragen | Chris_Gaming445</title>
   <link rel="shortcut icon" href="/assets/images/cg-logo-neu.png-496x496.png" type="image/x-icon">
   <link rel="stylesheet" href="/assets/bootstrap/css/bootstrap.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -231,8 +224,8 @@ function rl_send_429(int $retry_after): never
   <div class="box">
     <h1>429</h1>
     <h2>Zu viele Anfragen</h2>
-    <p><?= htmlspecialchars($msg) ?></p>
-    <a href="/"><i class="fas fa-arrow-left"></i>Zurück zur Startseite</a>
+    <p>Du hast das Anfrage-Limit erreicht. Bitte versuche es in <strong>30 Minuten</strong> erneut.</p>
+    <a href="/"><i class="fas fa-arrow-left"></i>Zur&uuml;ck zur Startseite</a>
   </div>
 </body>
 </html>
@@ -240,5 +233,5 @@ function rl_send_429(int $retry_after): never
     exit;
 }
 
-// ── Run immediately on include ───────────────────────────────────
+//  Run immediately on include 
 rate_limit_check();

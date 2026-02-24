@@ -83,6 +83,8 @@ function isActive(string $page, string $current): string {
             <li><a class="dropdown-item cg-dropdown-item" href="/admin/users.php"><i class="fas fa-users me-2"></i>Benutzerverwaltung</a></li>
             <li><a class="dropdown-item cg-dropdown-item" href="/admin/projects.php"><i class="fas fa-folder-open me-2"></i>Projekte</a></li>
             <li><a class="dropdown-item cg-dropdown-item" href="/admin/announcements.php"><i class="fas fa-newspaper me-2"></i>Ankündigungen</a></li>
+            <li><hr class="dropdown-divider" style="border-color:rgba(255,255,255,.1)"></li>
+            <li><a class="dropdown-item cg-dropdown-item" href="/admin/logs.php"><i class="fas fa-scroll me-2"></i>Activity Log</a></li>
           </ul>
         </li>
         <?php endif; ?>
@@ -160,6 +162,7 @@ function isActive(string $page, string $current): string {
       <li class="nav-item"><a class="cg-nav-link" href="/admin/users.php"><i class="fas fa-users me-1"></i>Benutzerverwaltung</a></li>
       <li class="nav-item"><a class="cg-nav-link" href="/admin/projects.php"><i class="fas fa-folder-open me-1"></i>Projekte verwalten</a></li>
       <li class="nav-item"><a class="cg-nav-link" href="/admin/announcements.php"><i class="fas fa-newspaper me-1"></i>Ankündigungen</a></li>
+      <li class="nav-item"><a class="cg-nav-link" href="/admin/logs.php"><i class="fas fa-scroll me-1"></i>Activity Log</a></li>
       <?php endif; ?>
       <?php endif; ?>
     </ul>

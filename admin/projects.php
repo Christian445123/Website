@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo !== null) {
                      VALUES (?,?,?,?,?,?,?,?,?,?,1)'
                 )->execute([$title,$desc,$iconClass,$iconColor,$iconBg,$tagsJson,
                              $linkUrl ?: null, $linkLabel ?: null, $linkStyle, $sortOrder]);
+                cg_log(LOG_ADMIN_PROJECT_CREATED, ['title' => $title, 'link' => $linkUrl]);
                 $message = 'Projekt erstellt.';
             } else {
                 $id = (int) ($_POST['id'] ?? 0);
@@ -47,15 +48,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo !== null) {
                      WHERE `id`=?'
                 )->execute([$title,$desc,$iconClass,$iconColor,$iconBg,$tagsJson,
                              $linkUrl ?: null, $linkLabel ?: null, $linkStyle, $sortOrder, $id]);
+                cg_log(LOG_ADMIN_PROJECT_UPDATED, ['id' => $id, 'title' => $title]);
                 $message = 'Projekt aktualisiert.';
             }
         } elseif ($action === 'toggle') {
             $id = (int) ($_POST['id'] ?? 0);
             $pdo->prepare('UPDATE `projects` SET `is_active`=1-`is_active` WHERE `id`=?')->execute([$id]);
+            cg_log(LOG_ADMIN_PROJECT_TOGGLED, ['id' => $id]);
             $message = 'Sichtbarkeit geändert.';
         } elseif ($action === 'delete') {
             $id = (int) ($_POST['id'] ?? 0);
+            $tRow = $pdo->prepare('SELECT `title` FROM `projects` WHERE `id`=?');
+            $tRow->execute([$id]);
+            $tTitle = $tRow->fetchColumn();
             $pdo->prepare('DELETE FROM `projects` WHERE `id`=?')->execute([$id]);
+            cg_log(LOG_ADMIN_PROJECT_DELETED, ['id' => $id, 'title' => $tTitle ?: '']);
             $message = 'Projekt gelöscht.';
         }
     } catch (Throwable $e) {
