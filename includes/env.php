@@ -17,7 +17,7 @@
 declare(strict_types=1);
 
 (static function (): void {
-    static bool $loaded = false;
+    static $loaded = false;   // kein Typ – kompatibel mit PHP 8.0+
     if ($loaded) {
         return;
     }
