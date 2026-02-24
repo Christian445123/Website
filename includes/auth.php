@@ -362,7 +362,12 @@ function auth_register(string $firstName, string $lastName, string $email): arra
         $insert->execute([$username, $firstName, $lastName, $email, $token, $hash]);
 
     } catch (\Throwable $e) {
-        cg_log(LOG_REGISTER_FAILED, ['email' => $email, 'error' => $e->getMessage()]);
+        $errMsg = $e->getMessage();
+        cg_log(LOG_REGISTER_FAILED, ['email' => $email, 'error' => $errMsg]);
+        // DEBUG: show real error (remove after fixing)
+        if ((string) env('APP_DEBUG', '') === 'true') {
+            return 'Registrierung fehlgeschlagen: ' . $errMsg;
+        }
         return 'Registrierung fehlgeschlagen. Bitte später erneut versuchen.';
     }
 
