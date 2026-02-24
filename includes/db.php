@@ -63,32 +63,20 @@ function db(): ?PDO
 function db_migrate(PDO $pdo): void
 {
     try {
-<<<<<<< Updated upstream
-        // ── rate_limit ──────────────────────────────────────────────
-=======
 
         // ── rate_limit ────────────────────────────────────────────────
->>>>>>> Stashed changes
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS `rate_limit` (
                 `id`           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                 `ip`           VARCHAR(45)         NULL COMMENT 'Echte IP-Adresse',
-<<<<<<< Updated upstream
-                `ip_hash`      VARCHAR(64)     NOT NULL COMMENT 'SHA-256 der IP',
-=======
                 `ip_hash`      VARCHAR(64)     NOT NULL DEFAULT '' COMMENT 'SHA-256 der IP',
->>>>>>> Stashed changes
                 `requested_at` INT UNSIGNED    NOT NULL COMMENT 'UNIX-Timestamp',
                 PRIMARY KEY (`id`),
                 INDEX `idx_ip_time` (`ip_hash`, `requested_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
 
-<<<<<<< Updated upstream
-        // ── users ───────────────────────────────────────────────────────
-=======
         // ── users ─────────────────────────────────────────────────────
->>>>>>> Stashed changes
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS `users` (
                 `id`                  INT UNSIGNED     NOT NULL AUTO_INCREMENT,
@@ -110,11 +98,7 @@ function db_migrate(PDO $pdo): void
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
 
-<<<<<<< Updated upstream
-        // ── projects ────────────────────────────────────────────────────
-=======
         // ── projects ──────────────────────────────────────────────────
->>>>>>> Stashed changes
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS `projects` (
                 `id`          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
@@ -136,11 +120,7 @@ function db_migrate(PDO $pdo): void
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
 
-<<<<<<< Updated upstream
-        // ── announcements ───────────────────────────────────────────────
-=======
         // ── announcements ─────────────────────────────────────────────
->>>>>>> Stashed changes
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS `announcements` (
                 `id`         INT UNSIGNED  NOT NULL AUTO_INCREMENT,
@@ -155,11 +135,7 @@ function db_migrate(PDO $pdo): void
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
 
-<<<<<<< Updated upstream
-        // ── activity_log ────────────────────────────────────────────────
-=======
         // ── activity_log ──────────────────────────────────────────────
->>>>>>> Stashed changes
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS `activity_log` (
                 `id`         BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
@@ -177,27 +153,6 @@ function db_migrate(PDO $pdo): void
                 INDEX `idx_created_at` (`created_at`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
-<<<<<<< Updated upstream
-        // ── Column migrations (safe ADD IF NOT EXISTS) ─────────────────
-        // Adds missing columns to already-existing tables without dropping data.
-        $dbName = $pdo->query('SELECT DATABASE()')->fetchColumn();
-        $cols   = $pdo->prepare(
-            'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-              WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?'
-        );
-
-        // rate_limit: add `ip` if missing
-        $cols->execute([$dbName, 'rate_limit']);
-        $rlCols = $cols->fetchAll(PDO::FETCH_COLUMN);
-        if (!in_array('ip', $rlCols, true)) {
-            $pdo->exec("ALTER TABLE `rate_limit` ADD COLUMN `ip` VARCHAR(45) NULL AFTER `id`");
-        }
-
-        // users: add new columns if missing
-        $cols->execute([$dbName, 'users']);
-        $userCols = $cols->fetchAll(PDO::FETCH_COLUMN);
-        $userMigrations = [
-=======
 
         // ── Spalten-Migrationen (idempotent via INFORMATION_SCHEMA) ───
         $dbName = (string) $pdo->query('SELECT DATABASE()')->fetchColumn();
@@ -218,30 +173,16 @@ function db_migrate(PDO $pdo): void
         // users: neue Spalten ergänzen falls fehlend
         $userCols = $getColumns('users');
         $userAlters = [
->>>>>>> Stashed changes
             'first_name'         => "ADD COLUMN `first_name` VARCHAR(64) NULL AFTER `username`",
             'last_name'          => "ADD COLUMN `last_name` VARCHAR(64) NULL AFTER `first_name`",
             'email_verified'     => "ADD COLUMN `email_verified` TINYINT(1) NOT NULL DEFAULT 0 AFTER `email`",
             'email_verify_token' => "ADD COLUMN `email_verify_token` VARCHAR(64) NULL AFTER `email_verified`",
         ];
-<<<<<<< Updated upstream
-        foreach ($userMigrations as $col => $ddl) {
-=======
         foreach ($userAlters as $col => $ddl) {
->>>>>>> Stashed changes
             if (!in_array($col, $userCols, true)) {
                 $pdo->exec("ALTER TABLE `users` {$ddl}");
             }
         }
-<<<<<<< Updated upstream
-        // Fix is_active default: old schema had DEFAULT 1, new schema needs DEFAULT 0
-        // (accounts inactive until email verified) – only update if no users exist yet
-        $userCount = (int) $pdo->query('SELECT COUNT(*) FROM `users`')->fetchColumn();
-        if ($userCount === 0) {
-            $pdo->exec("ALTER TABLE `users` MODIFY COLUMN `is_active` TINYINT(1) NOT NULL DEFAULT 0");
-        }
-=======
->>>>>>> Stashed changes
 
     } catch (Throwable $e) {
         error_log('[CG] DB migrate error: ' . $e->getMessage());
