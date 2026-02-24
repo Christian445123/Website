@@ -21,7 +21,7 @@ require_once __DIR__ . '/includes/head.php';
     <div class="container">
 
       <!-- ---- PC 1 ---- -->
-      <div class="cg-card mb-5" data-cg-animate="animate__fadeInUp">
+      <div class="cg-card mb-5">
         <div class="d-flex align-items-center gap-3 mb-4">
           <span class="cg-feature-icon" style="min-width:48px;height:48px;font-size:1.2rem;border-radius:.5rem;flex-shrink:0;">
             <i class="fas fa-desktop"></i>
@@ -76,7 +76,7 @@ require_once __DIR__ . '/includes/head.php';
       </div>
 
       <!-- ---- PC 2 ---- -->
-      <div class="cg-card mb-5" data-cg-animate="animate__fadeInUp" data-cg-delay=".1s">
+      <div class="cg-card mb-5">
         <div class="d-flex align-items-center gap-3 mb-4">
           <span class="cg-feature-icon" style="min-width:48px;height:48px;font-size:1.2rem;border-radius:.5rem;flex-shrink:0;background:rgba(112,72,232,.15);color:#9775fa;">
             <i class="fas fa-server"></i>
@@ -131,7 +131,7 @@ require_once __DIR__ . '/includes/head.php';
       </div>
 
       <!-- ---- Peripherie ---- -->
-      <div class="cg-card" data-cg-animate="animate__fadeInUp" data-cg-delay=".2s">
+      <div class="cg-card">
         <div class="d-flex align-items-center gap-3 mb-4">
           <span class="cg-feature-icon" style="min-width:48px;height:48px;font-size:1.2rem;border-radius:.5rem;flex-shrink:0;">
             <i class="fas fa-keyboard"></i>

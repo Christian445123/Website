@@ -21,8 +21,6 @@ $pageDescription = $pageDescription ?? 'Die offizielle Website von Chris_Gaming4
 
   <!-- Bootstrap -->
   <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
-  <!-- Animate.css -->
-  <link rel="stylesheet" href="assets/animatecss/animate.css">
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

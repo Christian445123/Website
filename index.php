@@ -18,7 +18,7 @@ require_once __DIR__ . '/includes/head.php';
         <!-- Logo -->
         <div class="col-12 col-lg-5 text-center">
           <a href="index.php">
-            <img src="assets/images/cg-logo-neu.png-800x800.png"
+            <img src="assets/images/cg-logo-neu.webp-1-800x800.webp"
                  alt="Chris_Gaming445 Logo"
                  class="cg-hero-logo">
           </a>
@@ -29,7 +29,7 @@ require_once __DIR__ . '/includes/head.php';
           <span class="cg-section-label">Willkommen</span>
           <h1 class="cg-hero-title">
             Hey, ich bin<br>
-            <span class="cg-gradient-text">Chris_Gaming445</span>
+            <span class="cg-red">Chris_Gaming445</span>
           </h1>
           <p class="cg-hero-subtitle">
             Streamer · Gamer · IT-Systemtechniker aus Tirol.<br>
@@ -63,7 +63,7 @@ require_once __DIR__ . '/includes/head.php';
 
       <div class="row gy-4">
 
-        <div class="col-12 col-md-6 col-lg-3" data-cg-animate="animate__fadeInUp" data-cg-delay="0s">
+        <div class="col-12 col-md-6 col-lg-3">
           <div class="cg-card h-100 text-center">
             <div class="cg-feature-icon mx-auto">
               <i class="fab fa-twitch"></i>
@@ -76,7 +76,7 @@ require_once __DIR__ . '/includes/head.php';
           </div>
         </div>
 
-        <div class="col-12 col-md-6 col-lg-3" data-cg-animate="animate__fadeInUp" data-cg-delay=".1s">
+        <div class="col-12 col-md-6 col-lg-3">
           <div class="cg-card h-100 text-center">
             <div class="cg-feature-icon mx-auto" style="background:rgba(255,0,0,.12);color:#ff4444;">
               <i class="fab fa-youtube"></i>
@@ -89,7 +89,7 @@ require_once __DIR__ . '/includes/head.php';
           </div>
         </div>
 
-        <div class="col-12 col-md-6 col-lg-3" data-cg-animate="animate__fadeInUp" data-cg-delay=".2s">
+        <div class="col-12 col-md-6 col-lg-3">
           <div class="cg-card h-100 text-center">
             <div class="cg-feature-icon mx-auto" style="background:rgba(112,72,232,.15);color:#9775fa;">
               <i class="fas fa-code"></i>
@@ -102,7 +102,7 @@ require_once __DIR__ . '/includes/head.php';
           </div>
         </div>
 
-        <div class="col-12 col-md-6 col-lg-3" data-cg-animate="animate__fadeInUp" data-cg-delay=".3s">
+        <div class="col-12 col-md-6 col-lg-3">
           <div class="cg-card h-100 text-center">
             <div class="cg-feature-icon mx-auto" style="background:rgba(88,101,242,.15);color:#7289da;">
               <i class="fab fa-discord"></i>
@@ -122,7 +122,7 @@ require_once __DIR__ . '/includes/head.php';
   <!-- ============================================================
        CTA Strip
        ============================================================ -->
-  <section class="cg-section-sm" style="background:var(--cg-surface); border-top:1px solid var(--cg-border); border-bottom:1px solid var(--cg-border);">
+  <section class="cg-section-sm" style="background:var(--cg-surface);border-top:1px solid var(--cg-border);border-bottom:1px solid var(--cg-border);">
     <div class="container">
       <div class="row align-items-center gy-3">
         <div class="col-12 col-md-8">

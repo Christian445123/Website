@@ -198,6 +198,60 @@ function auth_login(string $username, string $password): bool
 }
 
 /**
+ * Register a new user account.
+ *
+ * Returns true on success, or a string error message on failure.
+ *
+ * @return true|string
+ */
+function auth_register(string $username, string $email, string $password, string $passwordConfirm): bool|string
+{
+    $username = trim($username);
+    $email    = trim($email);
+
+    if ($username === '' || $email === '' || $password === '') {
+        return 'Bitte alle Felder ausfüllen.';
+    }
+    if (mb_strlen($username) < 3 || mb_strlen($username) > 64) {
+        return 'Benutzername muss 3–64 Zeichen lang sein.';
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return 'Ungültige E-Mail-Adresse.';
+    }
+    if (mb_strlen($password) < 8) {
+        return 'Passwort muss mindestens 8 Zeichen lang sein.';
+    }
+    if ($password !== $passwordConfirm) {
+        return 'Passwörter stimmen nicht überein.';
+    }
+
+    $pdo = db();
+    if ($pdo === null) {
+        return 'Datenbankfehler. Bitte später erneut versuchen.';
+    }
+
+    try {
+        // Check uniqueness
+        $stmt = $pdo->prepare('SELECT `id` FROM `users` WHERE `username` = ? OR `email` = ? LIMIT 1');
+        $stmt->execute([$username, $email]);
+        if ($stmt->fetch() !== false) {
+            return 'Benutzername oder E-Mail ist bereits vergeben.';
+        }
+
+        $hash = password_hash($password, PASSWORD_BCRYPT);
+        $insert = $pdo->prepare(
+            'INSERT INTO `users` (`username`, `email`, `password_hash`, `role`, `is_active`)
+             VALUES (?, ?, ?, \'user\', 1)'
+        );
+        $insert->execute([$username, $email, $hash]);
+    } catch (Throwable) {
+        return 'Registrierung fehlgeschlagen. Bitte später erneut versuchen.';
+    }
+
+    return true;
+}
+
+/**
  * Destroy the current session and log the user out.
  * Optionally redirects to a URL.
  */

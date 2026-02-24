@@ -24,7 +24,7 @@ require_once __DIR__ . '/includes/head.php';
 
         <!-- Quick Facts -->
         <div class="col-12 col-lg-4">
-          <div class="cg-card" data-cg-animate="animate__fadeInLeft">
+          <div class="cg-card">
             <h5 class="mb-4" style="color:var(--cg-red);">
               <i class="fas fa-id-card me-2"></i>Quick Facts
             </h5>
@@ -87,7 +87,7 @@ require_once __DIR__ . '/includes/head.php';
           </div>
 
           <!-- Social links -->
-          <div class="cg-card mt-4" data-cg-animate="animate__fadeInLeft" data-cg-delay=".1s">
+          <div class="cg-card mt-4">
             <h6 style="color:var(--cg-muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem;">Meine Kanäle</h6>
             <div class="d-flex flex-column gap-2">
               <a href="https://www.youtube.com/@chris_gaming4452" target="_blank" rel="noopener"
@@ -111,7 +111,7 @@ require_once __DIR__ . '/includes/head.php';
         </div>
 
         <!-- Text -->
-        <div class="col-12 col-lg-8" data-cg-animate="animate__fadeInRight">
+        <div class="col-12 col-lg-8">
           <div class="cg-about-text">
             <span class="cg-section-label">Meine Geschichte</span>
             <h2 class="mt-2 mb-4">Hallo, ich bin Christian!</h2>

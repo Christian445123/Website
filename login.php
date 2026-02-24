@@ -71,6 +71,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </button>
 
     </form>
+
+    <p class="text-center mt-4 mb-0" style="color:#8b8b9a;font-size:.9rem;">
+      Noch kein Konto?
+      <a href="/register.php" style="color:var(--cg-red);text-decoration:none;font-weight:600;">Jetzt registrieren</a>
+    </p>
+
   </div>
 </section>
 
@@ -159,8 +165,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 .cg-login-btn:hover {
   background: #c92a2a;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 18px rgba(224,49,49,.4);
 }
 </style>
 

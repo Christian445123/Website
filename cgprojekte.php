@@ -40,7 +40,7 @@ require_once __DIR__ . '/includes/head.php';
       <div class="row gy-4">
 
         <!-- Project: Streaming -->
-        <div class="col-12 col-md-6 col-lg-4" data-cg-animate="animate__fadeInUp" data-cg-delay="0s">
+        <div class="col-12 col-md-6 col-lg-4">
           <div class="cg-card h-100">
             <div class="cg-feature-icon" style="background:rgba(145,71,255,.15);color:#9147ff;">
               <i class="fab fa-twitch"></i>
@@ -63,7 +63,7 @@ require_once __DIR__ . '/includes/head.php';
         </div>
 
         <!-- Project: YouTube -->
-        <div class="col-12 col-md-6 col-lg-4" data-cg-animate="animate__fadeInUp" data-cg-delay=".1s">
+        <div class="col-12 col-md-6 col-lg-4">
           <div class="cg-card h-100">
             <div class="cg-feature-icon" style="background:rgba(255,68,68,.15);color:#ff4444;">
               <i class="fab fa-youtube"></i>
@@ -85,7 +85,7 @@ require_once __DIR__ . '/includes/head.php';
         </div>
 
         <!-- Project: Website -->
-        <div class="col-12 col-md-6 col-lg-4" data-cg-animate="animate__fadeInUp" data-cg-delay=".2s">
+        <div class="col-12 col-md-6 col-lg-4">
           <div class="cg-card h-100">
             <div class="cg-feature-icon" style="background:rgba(112,72,232,.15);color:#9775fa;">
               <i class="fas fa-globe"></i>
@@ -107,7 +107,7 @@ require_once __DIR__ . '/includes/head.php';
         </div>
 
         <!-- Project: Discord Community -->
-        <div class="col-12 col-md-6 col-lg-4" data-cg-animate="animate__fadeInUp" data-cg-delay=".3s">
+        <div class="col-12 col-md-6 col-lg-4">
           <div class="cg-card h-100">
             <div class="cg-feature-icon" style="background:rgba(88,101,242,.15);color:#7289da;">
               <i class="fab fa-discord"></i>
@@ -129,7 +129,7 @@ require_once __DIR__ . '/includes/head.php';
         </div>
 
         <!-- Project: IT Ausbildung -->
-        <div class="col-12 col-md-6 col-lg-4" data-cg-animate="animate__fadeInUp" data-cg-delay=".4s">
+        <div class="col-12 col-md-6 col-lg-4">
           <div class="cg-card h-100">
             <div class="cg-feature-icon">
               <i class="fas fa-laptop-code"></i>
@@ -151,7 +151,7 @@ require_once __DIR__ . '/includes/head.php';
         </div>
 
         <!-- Coming soon card -->
-        <div class="col-12 col-md-6 col-lg-4" data-cg-animate="animate__fadeInUp" data-cg-delay=".5s">
+        <div class="col-12 col-md-6 col-lg-4">
           <div class="cg-card h-100" style="border-style:dashed;opacity:.6;">
             <div class="cg-feature-icon" style="background:rgba(255,255,255,.07);color:var(--cg-muted);">
               <i class="fas fa-plus"></i>

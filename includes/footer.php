@@ -65,14 +65,9 @@
   </div>
 </footer>
 
-<!-- Scroll to Top -->
-<button class="cg-scroll-top" id="scrollTop" aria-label="Nach oben scrollen">
-  <i class="fas fa-chevron-up"></i>
-</button>
-
 <!-- Bootstrap JS -->
 <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
 <!-- Custom JS -->
-<script src="assets/js/custom.js"></script>
+<script src="assets/js/custom.js?v=<?= filemtime(__DIR__ . '/../assets/js/custom.js') ?>"></script>
 </body>
 </html>
