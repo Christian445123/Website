@@ -14,10 +14,10 @@
     Require all denied
 </FilesMatch>
 
-# ── Block access to includes/ and tmp/ ───────
+# ── Block access to includes/, tmp/ and sql/ ─
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^(includes|tmp)/.*$ - [F,L]
+    RewriteRule ^(includes|tmp|sql)/.*$ - [F,L]
 </IfModule>
 
 # ── Remove .php extension from URLs ──────────

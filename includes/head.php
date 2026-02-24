@@ -1,6 +1,8 @@
 <?php
-// Rate limiting – must run before any output
-require_once __DIR__ . '/rate_limit.php';
+// Boot order: env → db → rate_limit → auth
+// rate_limit.php already requires db.php, which requires env.php
+require_once __DIR__ . '/rate_limit.php';  // DB-backed rate limiting
+require_once __DIR__ . '/auth.php';        // Session bootstrap + login helpers
 
 // $pageTitle should be set before including this file
 // $pageDescription is optional

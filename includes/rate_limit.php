@@ -1,29 +1,31 @@
 <?php
 /**
- * CG Rate Limiter
- * ---------------
- * File-based IP rate limiter. No database required.
+ * CG Rate Limiter (DB-backed)
+ * ----------------------------
+ * Database-based IP rate limiter using the `rate_limit` table.
  *
  * Limits:
  *   - 30 requests per 60 seconds  (burst protection)
  *   - 200 requests per 3600 seconds (hourly cap)
  *
- * How it works:
- *   Each IP gets a JSON file in tmp/  containing an array
- *   of UNIX timestamps for every request. On each page load
- *   the file is read, old timestamps pruned, limits checked,
- *   and the new timestamp appended.
+ * Each page load inserts one row with a SHA-256 hashed IP and a
+ * UNIX timestamp.  Old rows (> 2 h) are pruned probabilistically.
+ *
+ * Requires:
+ *   - includes/db.php  (PDO singleton via db())
+ *   - `rate_limit` table – see sql/setup.sql
  */
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/db.php';
+
 // ── Configuration ────────────────────────────────────────────────
-const RL_DIR           = __DIR__ . '/../tmp/';   // storage directory
-const RL_LIMIT_MINUTE  = 30;                      // max requests per minute
-const RL_LIMIT_HOUR    = 200;                     // max requests per hour
-const RL_WINDOW_MINUTE = 60;                      // seconds
-const RL_WINDOW_HOUR   = 3600;                    // seconds
-const RL_CLEANUP_PROB  = 10;                      // % chance to run garbage collection
+const RL_LIMIT_MINUTE  = 30;    // max requests per minute
+const RL_LIMIT_HOUR    = 200;   // max requests per hour
+const RL_WINDOW_MINUTE = 60;    // seconds
+const RL_WINDOW_HOUR   = 3600;  // seconds
+const RL_CLEANUP_PROB  = 5;     // % chance to prune old rows
 
 // ── Helpers ─────────────────────────────────────────────────────
 
@@ -52,92 +54,71 @@ function rl_get_ip(): string
 }
 
 /**
- * Returns the filesystem path for an IP's rate-limit file.
- * The IP is hashed so that no raw IP addresses are stored on disk.
+ * Returns a SHA-256 hash of the raw IP address.
+ * Raw IPs are never stored; only the hash is persisted.
  */
-function rl_file_path(string $ip): string
+function rl_hash_ip(string $ip): string
 {
-    return RL_DIR . 'rl_' . hash('sha256', $ip) . '.json';
+    return hash('sha256', $ip);
 }
 
 /**
- * Reads the request log for an IP (array of timestamps).
- */
-function rl_read(string $path): array
-{
-    if (!file_exists($path)) {
-        return [];
-    }
-    $data = json_decode(file_get_contents($path), true);
-    return is_array($data) ? $data : [];
-}
-
-/**
- * Writes the request log back to disk (atomic via temp file).
- */
-function rl_write(string $path, array $timestamps): void
-{
-    $tmp = $path . '.tmp';
-    file_put_contents($tmp, json_encode($timestamps), LOCK_EX);
-    rename($tmp, $path);
-}
-
-/**
- * Occasionally removes stale rate-limit files (older than 2 h).
+ * Deletes all rate-limit rows older than 2 hours.
+ * Called probabilistically to avoid per-request overhead.
  */
 function rl_garbage_collect(): void
 {
     $threshold = time() - (RL_WINDOW_HOUR * 2);
-    foreach (glob(RL_DIR . 'rl_*.json') as $file) {
-        if (filemtime($file) < $threshold) {
-            @unlink($file);
-        }
-    }
+    db()->prepare('DELETE FROM `rate_limit` WHERE `requested_at` < ?')
+        ->execute([$threshold]);
 }
 
 // ── Main check ──────────────────────────────────────────────────
 
 /**
- * Runs the rate-limit check. If the visitor is over limit,
- * sends a 429 response and terminates execution.
- * Otherwise, records the request and returns.
+ * Runs the rate-limit check against the database.
+ * Sends a 429 response and terminates if the visitor is over limit.
+ * Otherwise logs the request row and returns.
  */
 function rate_limit_check(): void
 {
-    // Probabilistic garbage collection (avoid running every request)
+    // Probabilistic garbage collection
     if (rand(1, 100) <= RL_CLEANUP_PROB) {
         rl_garbage_collect();
     }
 
-    $ip   = rl_get_ip();
-    $path = rl_file_path($ip);
-    $now  = time();
+    $ipHash = rl_hash_ip(rl_get_ip());
+    $now    = time();
 
-    // Load existing timestamps
-    $log = rl_read($path);
+    $pdo = db();
 
-    // Remove entries older than the longest window
-    $log = array_filter($log, static fn(int $t) => $t > ($now - RL_WINDOW_HOUR));
-    $log = array_values($log);
+    // Count requests in minute window
+    $stmtMin = $pdo->prepare(
+        'SELECT COUNT(*) FROM `rate_limit`
+         WHERE `ip_hash` = ? AND `requested_at` > ?'
+    );
+    $stmtMin->execute([$ipHash, $now - RL_WINDOW_MINUTE]);
+    $minuteCount = (int) $stmtMin->fetchColumn();
 
-    // Count requests in each window
-    $minute_count = count(array_filter($log, static fn(int $t) => $t > ($now - RL_WINDOW_MINUTE)));
-    $hour_count   = count($log);
-
-    // Determine if over limit
-    if ($minute_count >= RL_LIMIT_MINUTE) {
-        $retry_after = RL_WINDOW_MINUTE;
-        rl_send_429($retry_after);
+    if ($minuteCount >= RL_LIMIT_MINUTE) {
+        rl_send_429(RL_WINDOW_MINUTE);
     }
 
-    if ($hour_count >= RL_LIMIT_HOUR) {
-        $retry_after = RL_WINDOW_HOUR;
-        rl_send_429($retry_after);
+    // Count requests in hour window
+    $stmtHour = $pdo->prepare(
+        'SELECT COUNT(*) FROM `rate_limit`
+         WHERE `ip_hash` = ? AND `requested_at` > ?'
+    );
+    $stmtHour->execute([$ipHash, $now - RL_WINDOW_HOUR]);
+    $hourCount = (int) $stmtHour->fetchColumn();
+
+    if ($hourCount >= RL_LIMIT_HOUR) {
+        rl_send_429(RL_WINDOW_HOUR);
     }
 
-    // Record this request
-    $log[] = $now;
-    rl_write($path, $log);
+    // Log this request
+    $pdo->prepare('INSERT INTO `rate_limit` (`ip_hash`, `requested_at`) VALUES (?, ?)')
+        ->execute([$ipHash, $now]);
 }
 
 /**
