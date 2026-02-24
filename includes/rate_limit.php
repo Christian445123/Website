@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * CG Rate Limiter  (DB-backed + automatischer Datei-Fallback)
  * -------------------------------------------------------------
