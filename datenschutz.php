@@ -1,6 +1,6 @@
 ﻿<?php
-$pageTitle       = 'DatenschutzerklÃ¤rung';
-$pageDescription = 'DatenschutzerklÃ¤rung der Website Chris_Gaming445.';
+$pageTitle       = 'Datenschutzerklärung';
+$pageDescription = 'Datenschutzerklärung der Website Chris_Gaming445.';
 require_once __DIR__ . '/includes/head.php';
 ?>
 
@@ -8,11 +8,10 @@ require_once __DIR__ . '/includes/head.php';
 
 <main>
 
-  <!-- Page Hero -->
   <section class="cg-page-hero">
     <div class="container">
       <span class="cg-section-label">Rechtliches</span>
-      <h1 class="mt-2">DatenschutzerklÃ¤rung</h1>
+      <h1 class="mt-2">Datenschutzerklärung</h1>
     </div>
   </section>
 
@@ -25,7 +24,7 @@ require_once __DIR__ . '/includes/head.php';
             <h2 style="margin-top:0;">1. Verantwortliche Stelle</h2>
             <p>
               Christian Tomeinschitz<br>
-              KlammstraÃŸe 44, 6020 Innsbruck<br>
+              Klammstraße 44, 6020 Innsbruck<br>
               E-Mail: <a href="mailto:info@chrisgaming.at">info@chrisgaming.at</a>
             </p>
 
@@ -39,48 +38,50 @@ require_once __DIR__ . '/includes/head.php';
 
             <h2>3. Cookies &amp; Session</h2>
             <p>
-              Diese Website setzt ausschlieÃŸlich technisch notwendige Session-Cookies ein, die
-              nach dem SchlieÃŸen des Browsers automatisch gelÃ¶scht werden. Sie dienen dem Betrieb
+              Diese Website setzt ausschließlich technisch notwendige Session-Cookies ein, die
+              nach dem Schließen des Browsers automatisch gelöscht werden. Sie dienen dem Betrieb
               des Login-Systems und erfordern keine Einwilligung (Art. 6 Abs. 1 lit. b DSGVO).
             </p>
 
             <h2>4. Registrierung &amp; Login</h2>
             <p>
               Wenn Sie sich auf dieser Website registrieren, werden folgende Daten gespeichert:
-              Benutzername, E-Mail-Adresse sowie ein sicheres Passwort-Hash (bcrypt). Diese Daten
-              werden ausschlieÃŸlich fÃ¼r den Betrieb des Benutzerkontos verwendet. Rechtsgrundlage:
-              Art. 6 Abs. 1 lit. b DSGVO. Auf Anfrage kÃ¶nnen Ihr Konto und alle zugehÃ¶rigen Daten
-              gelÃ¶scht werden.
+              Vorname, Nachname, E-Mail-Adresse sowie ein sicheres Passwort-Hash (bcrypt). Diese
+              Daten werden ausschließlich für den Betrieb des Benutzerkontos verwendet.
+              Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO. Auf Anfrage können Ihr Konto und alle
+              zugehörigen Daten gelöscht werden.
             </p>
 
             <h2>5. Google Analytics</h2>
             <p>
               Diese Website nutzt Google Analytics, einen Webanalysedienst der Google Ireland
               Limited, Gordon House, Barrow Street, Dublin 4, Irland. Google Analytics setzt
-              Cookies ein, die eine Analyse der Benutzung der Website ermÃ¶glichen. Die dadurch
-              erzeugten Informationen Ã¼ber Ihre Nutzung der Website werden Ã¼blicherweise an einen
-              Server von Google in den USA Ã¼bertragen und dort gespeichert.<br><br>
+              Cookies ein, die eine Analyse der Benutzung der Website ermöglichen. Die dadurch
+              erzeugten Informationen über Ihre Nutzung der Website werden üblicherweise an einen
+              Server von Google in den USA übertragen und dort gespeichert.<br><br>
               Grundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Analyse
               des Nutzungsverhaltens zur Optimierung des Angebots).<br><br>
-              Sie kÃ¶nnen die Erfassung durch Google Analytics verhindern, indem Sie ein Browser-Add-on
-              installieren: <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">tools.google.com/dlpage/gaoptout</a>.<br>
-              DatenschutzerklÃ¤rung Google: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>
+              Sie können die Erfassung durch Google Analytics verhindern, indem Sie ein Browser-Add-on
+              installieren:
+              <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">tools.google.com/dlpage/gaoptout</a>.<br>
+              Datenschutzerklärung Google:
+              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>
             </p>
 
             <h2>6. Ihre Rechte</h2>
             <p>
-              Sie haben das Recht auf Auskunft, Berichtigung, LÃ¶schung, EinschrÃ¤nkung der
-              Verarbeitung sowie DatenÃ¼bertragbarkeit. AuÃŸerdem steht Ihnen ein Widerspruchsrecht
-              und ein Beschwerderecht bei der Ã¶sterreichischen DatenschutzbehÃ¶rde
+              Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der
+              Verarbeitung sowie Datenübertragbarkeit. Außerdem steht Ihnen ein Widerspruchsrecht
+              und ein Beschwerderecht bei der österreichischen Datenschutzbehörde
               (<a href="https://www.dsb.gv.at" target="_blank" rel="noopener">www.dsb.gv.at</a>) zu.
-              Eine vollstÃ¤ndige Ãœbersicht finden Sie auf der
+              Eine vollständige Übersicht finden Sie auf der
               <a href="dsgvo.php">DSGVO-Rechte-Seite</a>.
             </p>
 
             <h2>7. Externe Links</h2>
             <p>
-              Diese Website enthÃ¤lt Links zu Drittanbieter-Diensten (YouTube, Twitch, Discord,
-              Instagram, Amazon). FÃ¼r die Datenschutzpraktiken dieser Anbieter sind die jeweiligen
+              Diese Website enthält Links zu Drittanbieter-Diensten (YouTube, Twitch, Discord,
+              Instagram). Für die Datenschutzpraktiken dieser Anbieter sind die jeweiligen
               Anbieter selbst verantwortlich.
             </p>
 

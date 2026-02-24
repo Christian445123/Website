@@ -48,6 +48,44 @@ CREATE TABLE IF NOT EXISTS `users` (
 --     ADD UNIQUE KEY `uk_verify_token` (`email_verify_token`);
 
 -- ------------------------------------------------------------
+--  Projects  (admin-managed project cards on cgprojekte.php)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `projects` (
+    `id`          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+    `title`       VARCHAR(128)  NOT NULL,
+    `description` TEXT          NOT NULL,
+    `icon_class`  VARCHAR(64)   NOT NULL DEFAULT 'fas fa-star'          COMMENT 'Font Awesome class(es)',
+    `icon_color`  VARCHAR(32)   NOT NULL DEFAULT '#e8351f'              COMMENT 'CSS colour value',
+    `icon_bg`     VARCHAR(64)   NOT NULL DEFAULT 'rgba(232,53,31,.15)'  COMMENT 'CSS background value',
+    `tags`        VARCHAR(512)       NULL                                COMMENT 'JSON array e.g. ["PHP","Bootstrap"]',
+    `link_url`    VARCHAR(512)       NULL,
+    `link_label`  VARCHAR(64)        NULL,
+    `link_style`  ENUM('primary','outline','discord','disabled') NOT NULL DEFAULT 'outline',
+    `sort_order`  SMALLINT      NOT NULL DEFAULT 0,
+    `is_active`   TINYINT(1)    NOT NULL DEFAULT 1,
+    `created_at`  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_sort` (`sort_order`, `id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+--  Announcements  (member-only news / exclusive info)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `announcements` (
+    `id`         INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+    `title`      VARCHAR(128)  NOT NULL,
+    `body`       TEXT          NOT NULL,
+    `author_id`  INT UNSIGNED  NOT NULL,
+    `is_active`  TINYINT(1)    NOT NULL DEFAULT 1,
+    `created_at` DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_active_created` (`is_active`, `created_at`),
+    CONSTRAINT `fk_ann_author` FOREIGN KEY (`author_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
 --  Sessions (optional – only needed for database-backed sessions)
 -- ------------------------------------------------------------
 -- If you want to store PHP sessions in the DB instead of files,

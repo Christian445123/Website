@@ -2,6 +2,17 @@
 $pageTitle       = 'Meine Projekte';
 $pageDescription = 'Alle Projekte von Chris_Gaming445 – von Streaming über IT bis kreative Eigenentwicklungen.';
 require_once __DIR__ . '/includes/head.php';
+
+// Load admin-managed DB projects
+$dbProjects = [];
+$pdo = db();
+if ($pdo !== null) {
+    try {
+        $dbProjects = $pdo->query(
+            'SELECT * FROM `projects` WHERE `is_active`=1 ORDER BY `sort_order` ASC, `id` ASC'
+        )->fetchAll();
+    } catch (Throwable) {}
+}
 ?>
 
 <?php require_once __DIR__ . '/includes/navbar.php'; ?>
@@ -39,7 +50,59 @@ require_once __DIR__ . '/includes/head.php';
 
       <div class="row gy-4">
 
-        <!-- Project: Streaming -->
+        <?php if (!empty($dbProjects)): ?>
+        <?php foreach ($dbProjects as $proj):
+          $tags = $proj['tags'] ? json_decode($proj['tags'], true) : [];
+          if (!is_array($tags)) $tags = [];
+        ?>
+        <!-- DB Project: <?= htmlspecialchars($proj['title']) ?> -->
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="cg-card h-100">
+            <div class="cg-feature-icon"
+                 style="background:<?= htmlspecialchars($proj['icon_bg']) ?>;color:<?= htmlspecialchars($proj['icon_color']) ?>;">
+              <i class="<?= htmlspecialchars($proj['icon_class']) ?>"></i>
+            </div>
+            <h5 class="mb-2"><?= htmlspecialchars($proj['title']) ?></h5>
+            <p class="cg-text-muted mb-3" style="font-size:.9rem;"><?= nl2br(htmlspecialchars($proj['description'])) ?></p>
+            <?php if (count($tags)): ?>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <?php $first = true; foreach ($tags as $tag):
+                $tagStyle = $first
+                  ? "background:{$proj['icon_bg']};color:{$proj['icon_color']};"
+                  : 'background:var(--cg-surface-2);color:var(--cg-muted);';
+                $first = false;
+              ?>
+              <span style="<?= $tagStyle ?>padding:.2rem .6rem;border-radius:2rem;font-size:.75rem;font-weight:600;">
+                <?= htmlspecialchars($tag) ?>
+              </span>
+              <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+            <?php if ($proj['link_url'] && $proj['link_label'] && $proj['link_style'] !== 'disabled'): ?>
+              <?php if ($proj['link_style'] === 'discord'): ?>
+                <a href="<?= htmlspecialchars($proj['link_url']) ?>" target="_blank" rel="noopener"
+                   class="cg-btn-discord w-100" style="justify-content:center;">
+                  <i class="fab fa-discord"></i><?= htmlspecialchars($proj['link_label']) ?>
+                </a>
+              <?php elseif ($proj['link_style'] === 'primary'): ?>
+                <a href="<?= htmlspecialchars($proj['link_url']) ?>" target="_blank" rel="noopener"
+                   class="cg-btn cg-btn-primary w-100" style="justify-content:center;">
+                  <i class="fas fa-arrow-up-right-from-square"></i><?= htmlspecialchars($proj['link_label']) ?>
+                </a>
+              <?php else: ?>
+                <a href="<?= htmlspecialchars($proj['link_url']) ?>" target="_blank" rel="noopener"
+                   class="cg-btn cg-btn-outline w-100"
+                   style="justify-content:center;border-color:<?= htmlspecialchars($proj['icon_color']) ?>;color:<?= htmlspecialchars($proj['icon_color']) ?>;">
+                  <i class="fas fa-arrow-up-right-from-square"></i><?= htmlspecialchars($proj['link_label']) ?>
+                </a>
+              <?php endif; ?>
+            <?php endif; ?>
+          </div>
+        </div>
+        <?php endforeach; ?>
+        <?php endif; ?>
+
+        <!-- Static projects (always shown) -->
         <div class="col-12 col-md-6 col-lg-4">
           <div class="cg-card h-100">
             <div class="cg-feature-icon" style="background:rgba(145,71,255,.15);color:#9147ff;">
@@ -150,18 +213,34 @@ require_once __DIR__ . '/includes/head.php';
           </div>
         </div>
 
-        <!-- Coming soon card -->
+        <!-- Coming soon / Admin add button -->
+        <?php if (auth_check() && auth_user()['role'] === 'admin'): ?>
+        <div class="col-12 col-md-6 col-lg-4">
+          <a href="/admin/projects.php" class="cg-card h-100 d-block text-decoration-none"
+             style="border-style:dashed;border-color:var(--cg-red);opacity:.8;transition:opacity .2s;"
+             onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">
+            <div class="cg-feature-icon" style="background:var(--cg-red-subtle);color:var(--cg-red);">
+              <i class="fas fa-plus"></i>
+            </div>
+            <h5 class="mb-2" style="color:var(--cg-red);">Projekt hinzufügen</h5>
+            <p style="color:var(--cg-muted);margin:0;font-size:.88rem;">
+              Als Admin kannst du hier neue Projektkarten erstellen.
+            </p>
+          </a>
+        </div>
+        <?php else: ?>
         <div class="col-12 col-md-6 col-lg-4">
           <div class="cg-card h-100" style="border-style:dashed;opacity:.6;">
             <div class="cg-feature-icon" style="background:rgba(255,255,255,.07);color:var(--cg-muted);">
               <i class="fas fa-plus"></i>
             </div>
-            <h5 class="mb-2" style="color:var(--cg-muted);">Mehr kommt bald…</h5>
+            <h5 class="mb-2" style="color:var(--cg-muted);">Mehr kommt bald&hellip;</h5>
             <p class="cg-text-muted mb-0" style="font-size:.9rem;">
               Neue Projekte sind in Planung. Bleib gespannt!
             </p>
           </div>
         </div>
+        <?php endif; ?>
 
       </div>
     </div>

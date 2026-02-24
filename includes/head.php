@@ -16,7 +16,7 @@ $pageDescription = $pageDescription ?? 'Die offizielle Website von Chris_Gaming4
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
   <meta name="description" content="<?= htmlspecialchars($pageDescription) ?>">
-  <link rel="shortcut icon" href="assets/images/cg-logo-neu.png-496x496.png" type="image/x-icon">
+  <link rel="shortcut icon" href="/assets/images/cg-logo-neu.png-496x496.png" type="image/x-icon">
   <title><?= htmlspecialchars($pageTitle) ?> | Chris_Gaming445</title>
 
   <!-- Google Analytics -->
@@ -29,7 +29,7 @@ $pageDescription = $pageDescription ?? 'Die offizielle Website von Chris_Gaming4
   </script>
 
   <!-- Bootstrap -->
-  <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/assets/bootstrap/css/bootstrap.min.css">
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,6 +37,6 @@ $pageDescription = $pageDescription ?? 'Die offizielle Website von Chris_Gaming4
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="assets/css/custom.css">
+  <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
 <body>
