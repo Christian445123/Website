@@ -137,16 +137,12 @@ function auth_require_role(string $requiredRole): void
 /**
  * Attempt to log a user in by username + password.
  *
- * Returns true on success (session is populated), false on failure.
+ * Returns true on success (session is populated),
+ * or a string error message on failure.
  *
- * Usage:
- *   if (auth_login($_POST['username'], $_POST['password'])) {
- *       header('Location: /');
- *   } else {
- *       $error = 'Benutzername oder Passwort falsch.';
- *   }
+ * @return true|string
  */
-function auth_login(string $username, string $password): bool
+function auth_login(string $username, string $password): bool|string
 {
     if (trim($username) === '' || $password === '') {
         return false;
@@ -159,7 +155,7 @@ function auth_login(string $username, string $password): bool
 
     try {
         $stmt = $pdo->prepare(
-            'SELECT `id`, `password_hash`, `role`, `is_active`
+            'SELECT `id`, `password_hash`, `role`, `is_active`, `email_verified`
              FROM `users`
              WHERE `username` = ?
              LIMIT 1'
@@ -170,14 +166,22 @@ function auth_login(string $username, string $password): bool
         return false;
     }
 
-    if ($row === false || !(bool) $row['is_active']) {
+    if ($row === false) {
         // Constant-time dummy verify to prevent timing attacks
         password_verify($password, '$2y$12$invaliddummyhashXXXXXXXXXXXXXXXXXXXXXXXX');
-        return false;
+        return 'Benutzername oder Passwort falsch.';
     }
 
     if (!password_verify($password, $row['password_hash'])) {
-        return false;
+        return 'Benutzername oder Passwort falsch.';
+    }
+
+    if (!(bool) $row['email_verified']) {
+        return 'Bitte bestätige zuerst deine E-Mail-Adresse. Schau in dein Postfach!';
+    }
+
+    if (!(bool) $row['is_active']) {
+        return 'Dein Account ist deaktiviert. Bitte kontaktiere uns.';
     }
 
     // Regenerate session ID to prevent fixation
@@ -197,32 +201,123 @@ function auth_login(string $username, string $password): bool
     return true;
 }
 
+// ── Registration helpers ─────────────────────────────────────────
+
+/**
+ * Transliterate a name to a clean ASCII slug (umlauts → digraphs).
+ */
+function auth_slugify_name(string $name): string
+{
+    $map = [
+        'ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue',
+        'Ä' => 'ae', 'Ö' => 'oe', 'Ü' => 'ue',
+        'ß' => 'ss',
+    ];
+    $slug = strtr(trim($name), $map);
+    $slug = strtolower($slug);
+    return preg_replace('/[^a-z0-9]/', '', $slug);
+}
+
+/**
+ * Generate a unique username from first + last name.
+ * Pattern: firstname.lastname, firstname.lastname2, …
+ */
+function auth_generate_username(string $firstName, string $lastName, \PDO $pdo): string
+{
+    $base = auth_slugify_name($firstName) . '.' . auth_slugify_name($lastName);
+    if ($base === '.') {
+        $base = 'user';
+    }
+
+    $candidate = $base;
+    $n         = 2;
+    while (true) {
+        $stmt = $pdo->prepare('SELECT `id` FROM `users` WHERE `username` = ? LIMIT 1');
+        $stmt->execute([$candidate]);
+        if ($stmt->fetch() === false) {
+            return $candidate;
+        }
+        $candidate = $base . $n;
+        $n++;
+    }
+}
+
+/**
+ * Generate a secure random password (12 chars, no ambiguous chars).
+ */
+function auth_generate_password(): string
+{
+    $chars    = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#%&';
+    $len      = strlen($chars);
+    $password = '';
+    for ($i = 0; $i < 12; $i++) {
+        $password .= $chars[random_int(0, $len - 1)];
+    }
+    return $password;
+}
+
+/**
+ * Send the verification e-mail.
+ * Returns true if mail() accepted the message, false otherwise.
+ */
+function auth_send_verify_email(
+    string $to,
+    string $firstName,
+    string $username,
+    string $password,
+    string $token
+): bool {
+    $verifyUrl = 'https://chrisgaming.at/verify.php?token=' . urlencode($token);
+
+    $subject = '=?UTF-8?B?' . base64_encode('ChrisGaming – E-Mail bestätigen') . '?=';
+
+    $body  = "Hallo {$firstName},\n\n";
+    $body .= "danke für deine Registrierung auf chrisgaming.at!\n\n";
+    $body .= "Hier sind deine Zugangsdaten:\n";
+    $body .= "  Benutzername: {$username}\n";
+    $body .= "  Passwort:     {$password}\n\n";
+    $body .= "Bitte speichere diese Daten sicher ab.\n\n";
+    $body .= "Bestätige jetzt deine E-Mail-Adresse (Link gültig 24 Stunden):\n";
+    $body .= "{$verifyUrl}\n\n";
+    $body .= "Viele Grüße,\nChris";
+
+    $headers  = 'From: noreply@chrisgaming.at' . "\r\n";
+    $headers .= 'Reply-To: noreply@chrisgaming.at' . "\r\n";
+    $headers .= 'Content-Type: text/plain; charset=UTF-8' . "\r\n";
+    $headers .= 'X-Mailer: PHP/' . PHP_VERSION . "\r\n";
+
+    return @mail($to, $subject, $body, $headers);
+}
+
 /**
  * Register a new user account.
  *
- * Returns true on success, or a string error message on failure.
+ * Generates username + password automatically.
+ * Creates the account in an unverified state and sends a verification e-mail.
  *
- * @return true|string
+ * On success returns an array:
+ *   ['username' => string, 'password' => string, 'email_sent' => bool]
+ * On failure returns a string error message.
+ *
+ * @return array{username:string,password:string,email_sent:bool}|string
  */
-function auth_register(string $username, string $email, string $password, string $passwordConfirm): bool|string
+function auth_register(string $firstName, string $lastName, string $email): array|string
 {
-    $username = trim($username);
-    $email    = trim($email);
+    $firstName = trim($firstName);
+    $lastName  = trim($lastName);
+    $email     = trim($email);
 
-    if ($username === '' || $email === '' || $password === '') {
+    if ($firstName === '' || $lastName === '' || $email === '') {
         return 'Bitte alle Felder ausfüllen.';
     }
-    if (mb_strlen($username) < 3 || mb_strlen($username) > 64) {
-        return 'Benutzername muss 3–64 Zeichen lang sein.';
+    if (mb_strlen($firstName) < 2 || mb_strlen($firstName) > 64) {
+        return 'Vorname muss 2–64 Zeichen lang sein.';
+    }
+    if (mb_strlen($lastName) < 2 || mb_strlen($lastName) > 64) {
+        return 'Nachname muss 2–64 Zeichen lang sein.';
     }
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         return 'Ungültige E-Mail-Adresse.';
-    }
-    if (mb_strlen($password) < 8) {
-        return 'Passwort muss mindestens 8 Zeichen lang sein.';
-    }
-    if ($password !== $passwordConfirm) {
-        return 'Passwörter stimmen nicht überein.';
     }
 
     $pdo = db();
@@ -231,24 +326,38 @@ function auth_register(string $username, string $email, string $password, string
     }
 
     try {
-        // Check uniqueness
-        $stmt = $pdo->prepare('SELECT `id` FROM `users` WHERE `username` = ? OR `email` = ? LIMIT 1');
-        $stmt->execute([$username, $email]);
+        // Check e-mail uniqueness
+        $stmt = $pdo->prepare('SELECT `id` FROM `users` WHERE `email` = ? LIMIT 1');
+        $stmt->execute([$email]);
         if ($stmt->fetch() !== false) {
-            return 'Benutzername oder E-Mail ist bereits vergeben.';
+            return 'Diese E-Mail-Adresse ist bereits registriert.';
         }
 
-        $hash = password_hash($password, PASSWORD_BCRYPT);
+        $username = auth_generate_username($firstName, $lastName, $pdo);
+        $password = auth_generate_password();
+        $hash     = password_hash($password, PASSWORD_BCRYPT);
+        $token    = bin2hex(random_bytes(32)); // 64-char hex token
+
         $insert = $pdo->prepare(
-            'INSERT INTO `users` (`username`, `email`, `password_hash`, `role`, `is_active`)
-             VALUES (?, ?, ?, \'user\', 1)'
+            'INSERT INTO `users`
+                 (`username`, `first_name`, `last_name`, `email`,
+                  `email_verified`, `email_verify_token`,
+                  `password_hash`, `role`, `is_active`)
+             VALUES (?, ?, ?, ?, 0, ?, ?, \'user\', 0)'
         );
-        $insert->execute([$username, $email, $hash]);
-    } catch (Throwable) {
+        $insert->execute([$username, $firstName, $lastName, $email, $token, $hash]);
+
+    } catch (\Throwable) {
         return 'Registrierung fehlgeschlagen. Bitte später erneut versuchen.';
     }
 
-    return true;
+    $emailSent = auth_send_verify_email($email, $firstName, $username, $password, $token);
+
+    return [
+        'username'   => $username,
+        'password'   => $password,
+        'email_sent' => $emailSent,
+    ];
 }
 
 /**

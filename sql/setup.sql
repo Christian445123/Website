@@ -20,18 +20,32 @@ CREATE TABLE IF NOT EXISTS `rate_limit` (
 --  Users  (login foundation)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `users` (
-    `id`            INT UNSIGNED     NOT NULL AUTO_INCREMENT,
-    `username`      VARCHAR(64)      NOT NULL,
-    `email`         VARCHAR(255)         NULL,
-    `password_hash` VARCHAR(255)     NOT NULL COMMENT 'bcrypt / argon2id via password_hash()',
-    `role`          ENUM('admin','moderator','user') NOT NULL DEFAULT 'user',
-    `is_active`     TINYINT(1)       NOT NULL DEFAULT 1,
-    `created_at`    DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `last_login`    DATETIME             NULL,
+    `id`                  INT UNSIGNED     NOT NULL AUTO_INCREMENT,
+    `username`            VARCHAR(64)      NOT NULL,
+    `first_name`          VARCHAR(64)          NULL,
+    `last_name`           VARCHAR(64)          NULL,
+    `email`               VARCHAR(255)         NULL,
+    `email_verified`      TINYINT(1)       NOT NULL DEFAULT 0,
+    `email_verify_token`  VARCHAR(64)          NULL   COMMENT 'NULL after verification',
+    `password_hash`       VARCHAR(255)     NOT NULL COMMENT 'bcrypt via password_hash()',
+    `role`                ENUM('admin','moderator','user') NOT NULL DEFAULT 'user',
+    `is_active`           TINYINT(1)       NOT NULL DEFAULT 0 COMMENT '0 until email verified',
+    `created_at`          DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `last_login`          DATETIME             NULL,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_username` (`username`),
-    UNIQUE KEY `uk_email`    (`email`)
+    UNIQUE KEY `uk_username`     (`username`),
+    UNIQUE KEY `uk_email`        (`email`),
+    UNIQUE KEY `uk_verify_token` (`email_verify_token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Run this once if the table already exists and you need to add the new columns:
+-- ALTER TABLE `users`
+--     ADD COLUMN `first_name`         VARCHAR(64)  NULL AFTER `username`,
+--     ADD COLUMN `last_name`          VARCHAR(64)  NULL AFTER `first_name`,
+--     ADD COLUMN `email_verified`     TINYINT(1)   NOT NULL DEFAULT 0 AFTER `email`,
+--     ADD COLUMN `email_verify_token` VARCHAR(64)  NULL AFTER `email_verified`,
+--     MODIFY COLUMN `is_active`       TINYINT(1)   NOT NULL DEFAULT 0,
+--     ADD UNIQUE KEY `uk_verify_token` (`email_verify_token`);
 
 -- ------------------------------------------------------------
 --  Sessions (optional – only needed for database-backed sessions)

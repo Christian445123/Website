@@ -15,12 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim((string) ($_POST['username'] ?? ''));
     $password = (string) ($_POST['password'] ?? '');
 
-    if (auth_login($username, $password)) {
+    $result = auth_login($username, $password);
+    if ($result === true) {
         header('Location: ' . $redirect);
         exit;
     }
 
-    $error = 'Benutzername oder Passwort falsch.';
+    $error = is_string($result) ? $result : 'Benutzername oder Passwort falsch.';
 }
 ?>
 <?php require_once __DIR__ . '/includes/navbar.php'; ?>
