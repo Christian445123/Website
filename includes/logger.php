@@ -66,6 +66,15 @@ const LOG_ADMIN_ANN_UPDATED      = 'admin.announcement.updated';
 const LOG_ADMIN_ANN_DELETED      = 'admin.announcement.deleted';
 const LOG_ADMIN_ANN_TOGGLED      = 'admin.announcement.toggled';
 
+// ── PHP-Laufzeitfehler ─────────────────────────────────────────
+const LOG_PHP_FATAL              = 'php.fatal';       // E_ERROR, parse, core, compile
+const LOG_PHP_EXCEPTION          = 'php.exception';   // Uncaught Throwable
+const LOG_PHP_ERROR              = 'php.error';       // E_USER_ERROR
+const LOG_PHP_WARNING            = 'php.warning';     // E_WARNING, E_CORE_WARNING, E_USER_WARNING
+const LOG_PHP_NOTICE             = 'php.notice';      // E_NOTICE, E_USER_NOTICE
+const LOG_PHP_DEPRECATED         = 'php.deprecated';  // E_DEPRECATED, E_USER_DEPRECATED
+const LOG_PHP_STRICT             = 'php.strict';      // E_STRICT
+
 // ═══════════════════════════════════════════════════════════════
 //  SEVERITY & DISCORD-METADATEN
 // ═══════════════════════════════════════════════════════════════
@@ -144,12 +153,27 @@ function cg_log_meta(string $event): array
         $event === LOG_ADMIN_ANN_TOGGLED
             => ['level' => 'info',     'color' => 0x5865F2, 'emoji' => '👁️', 'label' => 'Admin: Ankündigung-Sichtbarkeit geändert'],
 
+        // ── PHP-Laufzeitfehler ─────────────────────────────────
+        $event === LOG_PHP_FATAL
+            => ['level' => 'critical', 'color' => 0xFF0000, 'emoji' => '💀', 'label' => 'PHP Fatal Error'],
+        $event === LOG_PHP_EXCEPTION
+            => ['level' => 'critical', 'color' => 0xE03131, 'emoji' => '💥', 'label' => 'Unbehandelte Exception'],
+        $event === LOG_PHP_ERROR
+            => ['level' => 'critical', 'color' => 0xE03131, 'emoji' => '🔥', 'label' => 'PHP Error'],
+        $event === LOG_PHP_WARNING
+            => ['level' => 'warning',  'color' => 0xFAB005, 'emoji' => '⚠️', 'label' => 'PHP Warning'],
+        $event === LOG_PHP_NOTICE
+            => ['level' => 'debug',    'color' => 0x868E96, 'emoji' => '📌', 'label' => 'PHP Notice'],
+        $event === LOG_PHP_DEPRECATED
+            => ['level' => 'debug',    'color' => 0x868E96, 'emoji' => '🕰️', 'label' => 'PHP Deprecated'],
+        $event === LOG_PHP_STRICT
+            => ['level' => 'debug',    'color' => 0x868E96, 'emoji' => '📐', 'label' => 'PHP Strict'],
+
         // ── Fallback ───────────────────────────────────────────
         default
             => ['level' => 'info',     'color' => 0x868E96, 'emoji' => '📝', 'label' => $event],
     };
 }
-
 // ═══════════════════════════════════════════════════════════════
 //  HAUPT-LOG-FUNKTION
 // ═══════════════════════════════════════════════════════════════
@@ -314,3 +338,156 @@ function cg_log_get_ip(): string
     }
     return '0.0.0.0';
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  PHP ERROR / EXCEPTION / SHUTDOWN HANDLER
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Wandelt eine PHP-Fehlernummer (E_*) in die passende LOG_PHP_* Konstante um.
+ */
+function cg_php_errno_to_event(int $errno): string
+{
+    return match (true) {
+        (bool) ($errno & (E_ERROR | E_CORE_ERROR | E_COMPILE_ERROR | E_PARSE))
+            => LOG_PHP_FATAL,
+        (bool) ($errno & E_USER_ERROR)
+            => LOG_PHP_ERROR,
+        (bool) ($errno & (E_WARNING | E_CORE_WARNING | E_COMPILE_WARNING | E_USER_WARNING))
+            => LOG_PHP_WARNING,
+        (bool) ($errno & (E_DEPRECATED | E_USER_DEPRECATED))
+            => LOG_PHP_DEPRECATED,
+        (bool) ($errno & E_STRICT)
+            => LOG_PHP_STRICT,
+        default
+            => LOG_PHP_NOTICE,
+    };
+}
+
+/**
+ * Kürzt einen Dateipfad auf den Teil ab DOCUMENT_ROOT.
+ */
+function cg_log_short_path(string $path): string
+{
+    $root = rtrim((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''), '/\\');
+    if ($root !== '' && str_starts_with($path, $root)) {
+        return substr($path, strlen($root));
+    }
+    return $path;
+}
+
+/**
+ * set_error_handler – fängt alle PHP Warnings, Notices, Deprecations, etc.
+ * Gibt false zurück damit PHPs interner Handler ebenfalls läuft (error_log).
+ */
+function cg_php_error_handler(int $errno, string $errstr, string $errfile = '', int $errline = 0): bool
+{
+    static $guard = false;
+    if ($guard) {
+        return false;
+    }
+    $guard = true;
+
+    // Fehler die durch @ (Silence-Operator) unterdrückt wurden, ignorieren
+    if (!(error_reporting() & $errno)) {
+        $guard = false;
+        return false;
+    }
+
+    $event = cg_php_errno_to_event($errno);
+
+    cg_log($event, [
+        'message' => mb_substr($errstr, 0, 500),
+        'file'    => cg_log_short_path($errfile),
+        'line'    => $errline,
+        'errno'   => $errno,
+        'url'     => $_SERVER['REQUEST_URI'] ?? '',
+    ], null, null, webhook: true);
+
+    $guard = false;
+    return false; // PHPs Standard-Error-Log ebenfalls ausführen
+}
+
+/**
+ * set_exception_handler – fängt alle unbehandelten Exceptions/Throwables.
+ */
+function cg_php_exception_handler(Throwable $e): void
+{
+    static $guard = false;
+    if ($guard) {
+        return;
+    }
+    $guard = true;
+
+    cg_log(LOG_PHP_EXCEPTION, [
+        'class'   => get_class($e),
+        'message' => mb_substr($e->getMessage(), 0, 500),
+        'file'    => cg_log_short_path($e->getFile()),
+        'line'    => $e->getLine(),
+        'code'    => $e->getCode(),
+        'trace'   => mb_substr($e->getTraceAsString(), 0, 1500),
+        'url'     => $_SERVER['REQUEST_URI'] ?? '',
+    ], null, null, webhook: true);
+
+    $guard = false;
+
+    // Standard-Ausgabe (weiße Seite statt leerem Screen)
+    if (!headers_sent()) {
+        http_response_code(500);
+    }
+    if ((string) env('APP_DEBUG', '') === 'true') {
+        echo '<pre style="background:#1a1a1a;color:#ff6b6b;padding:2rem;font-size:.85rem">';
+        echo htmlspecialchars((string) $e);
+        echo '</pre>';
+    }
+}
+
+/**
+ * register_shutdown_function – fängt fatale Fehler, die set_error_handler nicht erreicht.
+ */
+function cg_php_shutdown_handler(): void
+{
+    $err = error_get_last();
+    if ($err === null) {
+        return;
+    }
+
+    // Nur echte fatale Fehler
+    $fatalMask = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR;
+    if (!($err['type'] & $fatalMask)) {
+        return;
+    }
+
+    static $guard = false;
+    if ($guard) {
+        return;
+    }
+    $guard = true;
+
+    cg_log(LOG_PHP_FATAL, [
+        'message' => mb_substr($err['message'], 0, 500),
+        'file'    => cg_log_short_path($err['file']),
+        'line'    => $err['line'],
+        'errno'   => $err['type'],
+        'url'     => $_SERVER['REQUEST_URI'] ?? '',
+    ], null, null, webhook: true);
+}
+
+/**
+ * Registriert alle drei PHP-Error-Handler.
+ * Wird einmalig beim Include von logger.php automatisch aufgerufen.
+ */
+function cg_register_error_handlers(): void
+{
+    // Alle Fehler PHP-intern sammeln, aber nicht ausgeben (Ausgabe via Logger)
+    error_reporting(E_ALL);
+    ini_set('display_errors', '0');   // nie an den Browser schicken
+    ini_set('log_errors',     '1');   // immer in PHP error_log schreiben
+
+    set_error_handler('cg_php_error_handler');
+    set_exception_handler('cg_php_exception_handler');
+    register_shutdown_function('cg_php_shutdown_handler');
+}
+
+// ── Auto-Register on include ─────────────────────────────────────
+cg_register_error_handlers();
