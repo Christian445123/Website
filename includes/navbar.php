@@ -54,6 +54,30 @@ function isActive(string $page, string $current): string {
             <i class="fab fa-discord me-1"></i>Discord
           </a>
         </li>
+        <!-- Login / User -->
+        <li class="nav-item ms-1 cg-user-dropdown">
+          <?php if (auth_check()): ?>
+            <?php $__u = auth_user(); ?>
+            <div class="dropdown">
+              <button class="cg-btn-user dropdown-toggle" type="button"
+                      data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user-circle"></i>
+                <?= htmlspecialchars($__u['username'] ?? 'Account') ?>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <?php if (($__u['role'] ?? '') === 'admin'): ?>
+                <li><a class="dropdown-item" href="/admin.php"><i class="fas fa-tools me-2"></i>Admin</a></li>
+                <li><hr class="dropdown-divider" style="border-color:rgba(255,255,255,.1)"></li>
+                <?php endif; ?>
+                <li><a class="dropdown-item text-danger" href="/logout.php"><i class="fas fa-sign-out-alt me-2"></i>Abmelden</a></li>
+              </ul>
+            </div>
+          <?php else: ?>
+            <a class="cg-btn-login" href="/login.php">
+              <i class="fas fa-sign-in-alt"></i>Login
+            </a>
+          <?php endif; ?>
+        </li>
       </ul>
     </div>
 
@@ -94,6 +118,26 @@ function isActive(string $page, string $current): string {
     </ul>
 
     <div class="mt-auto">
+      <!-- Login / User (Mobile) -->
+      <div class="mb-3">
+        <?php if (auth_check()): ?>
+          <?php $__u = auth_user(); ?>
+          <div class="d-flex align-items-center justify-content-between p-2 rounded"
+               style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)">
+            <span style="font-size:.9rem;color:#e8e8ed">
+              <i class="fas fa-user-circle me-2" style="color:var(--cg-red)"></i>
+              <?= htmlspecialchars($__u['username'] ?? 'Account') ?>
+            </span>
+            <a href="/logout.php" class="cg-btn-login" style="padding:.3rem .75rem;font-size:.8rem">
+              <i class="fas fa-sign-out-alt"></i>Logout
+            </a>
+          </div>
+        <?php else: ?>
+          <a class="cg-btn-login w-100 justify-content-center" href="/login.php">
+            <i class="fas fa-sign-in-alt"></i>Login
+          </a>
+        <?php endif; ?>
+      </div>
       <p class="cg-offcanvas-social-title">Besuche mich auf meinen Socials</p>
       <div class="d-flex gap-3 mb-4 cg-social-icons">
         <a href="https://www.youtube.com/@chris_gaming4452" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a>

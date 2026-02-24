@@ -13,7 +13,8 @@
   };
 
   // ---- Navbar: add .scrolled class on scroll ----
-  const navbar = document.getElementById('mainNav');
+  const navbar   = document.getElementById('mainNav');
+  const scrollBtn = document.getElementById('scrollTop'); // declare BEFORE onScroll
   const onScroll = () => {
     updateScrollProgress();
     if (navbar) {
@@ -28,7 +29,6 @@
   onScroll(); // run on load
 
   // ---- Scroll to Top ----
-  const scrollBtn = document.getElementById('scrollTop');
   if (scrollBtn) {
     scrollBtn.addEventListener('click', () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });

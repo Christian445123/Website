@@ -18,7 +18,7 @@ require_once __DIR__ . '/includes/head.php';
         <!-- Logo -->
         <div class="col-12 col-lg-5 text-center">
           <a href="index.php">
-            <img src="assets/images/cg-logo-neu.png-1-800x800.png"
+            <img src="assets/images/cg-logo-neu.png-800x800.png"
                  alt="Chris_Gaming445 Logo"
                  class="cg-hero-logo">
           </a>
