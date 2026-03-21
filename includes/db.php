@@ -42,7 +42,10 @@ function db(): ?PDO
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
-        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset} COLLATE {$charset}_unicode_ci",
+        // PDO::MYSQL_ATTR_INIT_COMMAND ist ab PHP 8.5 deprecated;
+        // Pdo\Mysql::ATTR_INIT_COMMAND wurde in PHP 8.4 eingeführt.
+        (PHP_VERSION_ID >= 80400 ? Pdo\Mysql::ATTR_INIT_COMMAND : PDO::MYSQL_ATTR_INIT_COMMAND)
+            => "SET NAMES {$charset} COLLATE {$charset}_unicode_ci",
     ];
 
     try {

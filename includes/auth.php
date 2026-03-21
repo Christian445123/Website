@@ -270,8 +270,8 @@ function auth_generate_password(): string
 }
 
 /**
- * Send the verification e-mail.
- * Returns true if mail() accepted the message, false otherwise.
+ * Send the verification e-mail via PHPMailer + SMTP.
+ * Returns true on success, false on failure.
  */
 function auth_send_verify_email(
     string $to,
@@ -280,26 +280,58 @@ function auth_send_verify_email(
     string $password,
     string $token
 ): bool {
+    $autoload = dirname(__DIR__) . '/vendor/autoload.php';
+    if (!is_file($autoload)) {
+        error_log('[CG] PHPMailer not found – run composer install on the server.');
+        return false;
+    }
+    require_once $autoload;
+
     $verifyUrl = 'https://chrisgaming.at/verify.php?token=' . urlencode($token);
 
-    $subject = '=?UTF-8?B?' . base64_encode('ChrisGaming – E-Mail bestätigen') . '?=';
+    $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
 
-    $body  = "Hallo {$firstName},\n\n";
-    $body .= "danke für deine Registrierung auf chrisgaming.at!\n\n";
-    $body .= "Hier sind deine Zugangsdaten:\n";
-    $body .= "  Benutzername: {$username}\n";
-    $body .= "  Passwort:     {$password}\n\n";
-    $body .= "Bitte speichere diese Daten sicher ab.\n\n";
-    $body .= "Bestätige jetzt deine E-Mail-Adresse (Link gültig 24 Stunden):\n";
-    $body .= "{$verifyUrl}\n\n";
-    $body .= "Viele Grüße,\nChris";
+    try {
+        // ── SMTP ──────────────────────────────────────────────────
+        $mail->isSMTP();
+        $mail->Host       = (string) env('SMTP_HOST', 'localhost');
+        $mail->Port       = (int)    env('SMTP_PORT', 587);
+        $mail->SMTPAuth   = true;
+        $mail->Username   = (string) env('SMTP_USERNAME', '');
+        $mail->Password   = (string) env('SMTP_PASSWORD', '');
 
-    $headers  = 'From: noreply@chrisgaming.at' . "\r\n";
-    $headers .= 'Reply-To: noreply@chrisgaming.at' . "\r\n";
-    $headers .= 'Content-Type: text/plain; charset=UTF-8' . "\r\n";
-    $headers .= 'X-Mailer: PHP/' . PHP_VERSION . "\r\n";
+        $enc = strtoupper((string) env('SMTP_ENCRYPTION', 'STARTTLS'));
+        $mail->SMTPSecure = ($enc === 'SSL')
+            ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
+            : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
 
-    return @mail($to, $subject, $body, $headers);
+        // ── Absender & Empfänger ──────────────────────────────────
+        $mail->setFrom(
+            (string) env('SMTP_FROM', 'noreply@chrisgaming.at'),
+            (string) env('SMTP_FROM_NAME', 'ChrisGaming')
+        );
+        $mail->addAddress($to);
+        $mail->CharSet = 'UTF-8';
+
+        // ── Inhalt ────────────────────────────────────────────────
+        $mail->Subject = 'ChrisGaming – E-Mail bestätigen';
+        $mail->isHTML(false);
+        $mail->Body  = "Hallo {$firstName},\n\n";
+        $mail->Body .= "danke für deine Registrierung auf chrisgaming.at!\n\n";
+        $mail->Body .= "Hier sind deine Zugangsdaten:\n";
+        $mail->Body .= "  Benutzername: {$username}\n";
+        $mail->Body .= "  Passwort:     {$password}\n\n";
+        $mail->Body .= "Bitte speichere diese Daten sicher ab.\n\n";
+        $mail->Body .= "Bestätige jetzt deine E-Mail-Adresse (Link gültig 24 Stunden):\n";
+        $mail->Body .= "{$verifyUrl}\n\n";
+        $mail->Body .= "Viele Grüße,\nChris";
+
+        $mail->send();
+        return true;
+    } catch (\PHPMailer\PHPMailer\Exception $e) {
+        error_log('[CG] Mail send failed: ' . $e->getMessage());
+        return false;
+    }
 }
 
 /**
