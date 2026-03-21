@@ -75,61 +75,6 @@ require_once __DIR__ . '/includes/head.php';
         </div>
       </div>
 
-      <!-- ---- PC 2 ---- -->
-      <div class="cg-card mb-5">
-        <div class="d-flex align-items-center gap-3 mb-4">
-          <span class="cg-feature-icon" style="min-width:48px;height:48px;font-size:1.2rem;border-radius:.5rem;flex-shrink:0;background:rgba(112,72,232,.15);color:#9775fa;">
-            <i class="fas fa-server"></i>
-          </span>
-          <div>
-            <span class="cg-section-label" style="margin-bottom:0;border-color:#9775fa;color:#9775fa;">Zweitrechner</span>
-            <h3 class="mt-1 mb-0">PC 2 – Meine PC-Teile</h3>
-          </div>
-        </div>
-        <div class="table-responsive">
-          <table class="cg-equip-table">
-            <tbody>
-              <tr>
-                <th>Gehäuse</th>
-                <td><a href="https://www.amazon.de/Thermaltake-Versa-C21-PC-Geh%C3%A4use-schwarz/dp/B01LRX2NGC/" target="_blank" rel="noopener">Thermaltake Versa C21</a></td>
-              </tr>
-              <tr>
-                <th>Grafikkarte</th>
-                <td>
-                  <strong>NVIDIA GeForce RTX 2080</strong> (nicht mehr im Handel)
-                  &nbsp;·&nbsp;
-                  <a href="https://www.nvidia.com/de-at/geforce/graphics-cards/compare/?section=compare-20" target="_blank" rel="noopener" style="font-size:.85rem;">Technische Daten</a>
-                </td>
-              </tr>
-              <tr>
-                <th>Prozessor</th>
-                <td><a href="https://www.amazon.de/Intel-1358661-BX80673I97920X-CPU-grau/dp/B075VPCLHR/" target="_blank" rel="noopener">Intel Core i9-7920X</a></td>
-              </tr>
-              <tr>
-                <th>Arbeitsspeicher</th>
-                <td>32 GB (nicht mehr im Handel)</td>
-              </tr>
-              <tr>
-                <th>Mainboard</th>
-                <td><a href="https://www.amazon.de/ROG-B550-F-Mainboard-s-Ethernet-K%C3%BChlern/dp/B089HFNQ1K/" target="_blank" rel="noopener">ASUS ROG STRIX Z390-H GAMING</a></td>
-              </tr>
-              <tr>
-                <th>Wasserkühlung</th>
-                <td><a href="https://www.amazon.de/quiet-Silent-Loop-240/dp/B091CD3R4L/" target="_blank" rel="noopener">Be Quiet Silent Loop 240 mm</a></td>
-              </tr>
-              <tr>
-                <th>Netzteil</th>
-                <td><a href="https://www.amazon.de/Thermaltake-Smart-RGB-700W-PC-Netzteil/dp/B0744P7VHW/" target="_blank" rel="noopener">Thermaltake Smart RGB 700 W</a></td>
-              </tr>
-              <tr>
-                <th>Lüfter</th>
-                <td><a href="https://www.amazon.de/gp/product/B09KMBZ7F7" target="_blank" rel="noopener">Be Quiet Light Wings 120 mm</a></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       <!-- ---- Peripherie ---- -->
       <div class="cg-card">
         <div class="d-flex align-items-center gap-3 mb-4">
