@@ -16,6 +16,36 @@
 
 declare(strict_types=1);
 
+/**
+ * Entschlüsselt einen AES-256-CBC verschlüsselten Wert aus der .env.
+ * Format: ENC:<iv_base64>:<ciphertext_base64>
+ */
+function decryptEnvValue(string $encoded): string
+{
+    $keyFile = dirname(__DIR__) . '/.db_enc_key';
+
+    if (!is_file($keyFile)) {
+        throw new \RuntimeException('[CG] Encryption key file .db_enc_key not found.');
+    }
+
+    $key   = base64_decode(trim((string) file_get_contents($keyFile)));
+    $parts = explode(':', $encoded, 2);
+
+    if (count($parts) !== 2) {
+        throw new \RuntimeException('[CG] Invalid ENC: value format in .env.');
+    }
+
+    $iv     = base64_decode($parts[0]);
+    $cipher = base64_decode($parts[1]);
+    $plain  = openssl_decrypt($cipher, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+
+    if ($plain === false) {
+        throw new \RuntimeException('[CG] AES decryption failed – wrong key or corrupted value.');
+    }
+
+    return $plain;
+}
+
 (static function (): void {
     static $loaded = false;   // kein Typ – kompatibel mit PHP 8.0+
     if ($loaded) {
@@ -55,6 +85,11 @@ declare(strict_types=1);
              ($value[0] === "'" && $value[-1] === "'"))
         ) {
             $value = substr($value, 1, -1);
+        }
+
+        // AES-256-CBC verschlüsselte Werte automatisch entschlüsseln
+        if (str_starts_with($value, 'ENC:')) {
+            $value = decryptEnvValue(substr($value, 4));
         }
 
         $_ENV[$key] = $value;

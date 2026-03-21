@@ -1,0 +1,7 @@
+# Sensible Konfigurationsdateien – nie in Git einchecken!
+.env
+.db_enc_key
+
+# Temporäre Dateien
+tmp/
+.env
