@@ -1,7 +1,10 @@
 # Sensible Konfigurationsdateien – nie in Git einchecken!
 .env
 .db_enc_key
+secret.key
 
 # Temporäre Dateien
 tmp/
 .env
+encrypt_env.php
+includes/env.php

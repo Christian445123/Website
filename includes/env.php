@@ -18,26 +18,42 @@ declare(strict_types=1);
 
 /**
  * Entschlüsselt einen AES-256-CBC verschlüsselten Wert aus der .env.
- * Format: ENC:<iv_base64>:<ciphertext_base64>
+ * Format: ENC:<base64(iv + ciphertext)>  (IV und Ciphertext konkateniert)
+ *
+ * Schlüssel-Lookup (erste Treffer gewinnt):
+ *  1. Datei über Umgebungsvariable  CG_KEY_FILE  (Pfad zur secret.key)
+ *  2. Standard-Serverpfad           /home/chrisgaming/secret.key
+ *  3. Umgebungsvariable             CG_SECRET_KEY (Schlüssel-String direkt)
+ *
+ * Der Schlüssel liegt BEWUSST außerhalb des Webroots (htdocs).
  */
 function decryptEnvValue(string $encoded): string
 {
-    $keyFile = dirname(__DIR__) . '/.db_enc_key';
+    $keyFile = getenv('CG_KEY_FILE') ?: '/home/chrisgaming/secret.key';
 
-    if (!is_file($keyFile)) {
-        throw new \RuntimeException('[CG] Encryption key file .db_enc_key not found.');
+    if (is_readable($keyFile)) {
+        $raw = trim((string) file_get_contents($keyFile));
+    } else {
+        $raw = (string) getenv('CG_SECRET_KEY');
     }
 
-    $key   = base64_decode(trim((string) file_get_contents($keyFile)));
-    $parts = explode(':', $encoded, 2);
-
-    if (count($parts) !== 2) {
-        throw new \RuntimeException('[CG] Invalid ENC: value format in .env.');
+    if ($raw === '') {
+        throw new \RuntimeException(
+            '[CG] Encryption key not found. ' .
+            'Create /home/chrisgaming/secret.key or set CG_SECRET_KEY.'
+        );
     }
 
-    $iv     = base64_decode($parts[0]);
-    $cipher = base64_decode($parts[1]);
-    $plain  = openssl_decrypt($cipher, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+    $key = hash('sha256', $raw, true);
+    $bin = base64_decode($encoded, true);
+
+    if ($bin === false || strlen($bin) <= 16) {
+        throw new \RuntimeException('[CG] Invalid ENC: value in .env.');
+    }
+
+    $iv     = substr($bin, 0, 16);
+    $cipher = substr($bin, 16);
+    $plain  = openssl_decrypt($cipher, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
 
     if ($plain === false) {
         throw new \RuntimeException('[CG] AES decryption failed – wrong key or corrupted value.');
