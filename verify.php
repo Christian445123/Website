@@ -5,7 +5,7 @@ require_once __DIR__ . '/includes/head.php';
 
 // If already logged in, go home
 if (auth_check()) {
-    header('Location: /');
+    header('Location: ' . cg_url('/'));
     exit;
 }
 

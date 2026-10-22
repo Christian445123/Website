@@ -125,7 +125,7 @@
     const text = document.createElement('p');
     text.append(L.text);
     const link = document.createElement('a');
-    link.href = '/datenschutz.php';
+    link.href = (document.documentElement.lang === 'en') ? '/en/datenschutz.php' : '/datenschutz.php';
     link.textContent = L.link;
     text.append(link, '.');
 

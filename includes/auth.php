@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/logger.php'; // Activity Logger
+require_once __DIR__ . '/i18n.php';   // cg_url(), cg_lang()
 
 const CG_SESSION_IDLE   = 7200;   // 2 Stunden Inaktivität
 const CG_SESSION_MAX    = 43200;  // 12 Stunden absolut
@@ -149,7 +150,7 @@ function auth_require_login(string $redirect = ''): void
     }
 
     $back = cg_safe_redirect($redirect !== '' ? $redirect : ($_SERVER['REQUEST_URI'] ?? '/'));
-    header('Location: /login.php?redirect=' . urlencode($back));
+    header('Location: ' . cg_url('/login.php') . '?redirect=' . urlencode($back));
     exit;
 }
 
@@ -407,7 +408,8 @@ function auth_send_verify_email(
     }
     require_once $autoload;
 
-    $verifyUrl = 'https://chrisgaming.at/verify.php?token=' . urlencode($token);
+    $verifyUrl = 'https://chrisgaming.at' . cg_url('/verify.php') . '?token=' . urlencode($token);
+    $en = cg_lang() === 'en';
 
     $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
 
@@ -434,8 +436,19 @@ function auth_send_verify_email(
         $mail->CharSet = 'UTF-8';
 
         // ── Inhalt ────────────────────────────────────────────────
-        $mail->Subject = 'ChrisGaming – E-Mail bestätigen';
         $mail->isHTML(false);
+        if ($en) {
+            $mail->Subject = 'ChrisGaming – Confirm your e-mail address';
+            $mail->Body    = "Hello {$firstName},\n\n"
+                . "thanks for registering on chrisgaming.at!\n\n"
+                . "Your login details:\n  Username: {$username}\n  Password: {$password}\n\n"
+                . "Please change the password in your dashboard after the first login and delete this e-mail.\n\n"
+                . "Confirm your e-mail address now (link valid for 24 hours):\n{$verifyUrl}\n\n"
+                . "If you did not register, simply ignore this e-mail.\n\nBest regards,\nChris";
+            $mail->send();
+            return true;
+        }
+        $mail->Subject = 'ChrisGaming – E-Mail bestätigen';
         $mail->Body  = "Hallo {$firstName},\n\n";
         $mail->Body .= "danke für deine Registrierung auf chrisgaming.at!\n\n";
         $mail->Body .= "Hier sind deine Zugangsdaten:\n";
@@ -700,7 +713,7 @@ function auth_send_reset_email(string $to, string $firstName, string $token, str
     }
     require_once $autoload;
 
-    $url  = 'https://chrisgaming.at/reset.php?token=' . urlencode($token);
+    $url  = 'https://chrisgaming.at' . cg_url('/reset.php') . '?token=' . urlencode($token);
     $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
 
     try {

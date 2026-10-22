@@ -4,7 +4,7 @@ $noindex   = true;
 require_once __DIR__ . '/includes/head.php';
 
 if (auth_check()) {
-    header('Location: /dashboard.php#passwort');
+    header('Location: ' . cg_url('/dashboard.php') . '#passwort');
     exit;
 }
 

@@ -6,7 +6,7 @@ require_once __DIR__ . '/includes/head.php';
 header('Referrer-Policy: no-referrer');
 
 if (auth_check()) {
-    header('Location: /dashboard.php#passwort');
+    header('Location: ' . cg_url('/dashboard.php') . '#passwort');
     exit;
 }
 
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         (string) ($_POST['confirm_password'] ?? '')
     );
     if ($res === true) {
-        header('Location: /login.php?reset=1');
+        header('Location: ' . cg_url('/login.php') . '?reset=1');
         exit;
     }
     $error = $res;

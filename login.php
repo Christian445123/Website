@@ -4,7 +4,7 @@ $noindex   = true;
 require_once __DIR__ . '/includes/head.php';
 
 // Nur lokale Pfade als Redirect-Ziel (verhindert Open Redirect via ?redirect=//evil.com)
-$redirect = cg_safe_redirect($_GET['redirect'] ?? '/');
+$redirect = cg_safe_redirect($_GET['redirect'] ?? '', cg_url('/'));
 
 // Already logged in → redirect
 if (auth_check()) {
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     <?php endif; ?>
 
-    <form method="POST" action="/login.php<?= $redirect !== '/' ? '?redirect=' . urlencode($redirect) : '' ?>" novalidate>
+    <form method="POST" action="/login.php<?= $redirect !== cg_url('/') ? '?redirect=' . urlencode($redirect) : '' ?>" novalidate>
       <?= csrf_field() ?>
 
       <div class="cg-form-group">

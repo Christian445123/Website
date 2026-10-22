@@ -2,8 +2,8 @@
 // Ausgabe puffern: Seiten leiten nach POST per header('Location') weiter bzw. rotieren die
 // Session-ID, nachdem head.php schon HTML geschrieben hat. Ohne Puffer würde das scheitern.
 require_once __DIR__ . '/i18n.php'; // Sprachwahl (?lang=) – leitet ggf. um
-header('Vary: Cookie, Accept-Language', false); // Caches dürfen Sprachen nicht vermischen
-header('X-CG-Lang: ' . cg_lang());   // Diagnose: curl -I https://chrisgaming.at/ -H 'Cookie: cg_lang=en'
+header('Content-Language: ' . cg_lang());
+header('X-CG-Lang: ' . cg_lang());   // Diagnose: curl -I https://chrisgaming.at/en/
 if (ob_get_level() === 0) {
     ob_start('cg_i18n_filter'); // übersetzt die Ausgabe bei Sprache EN
 }
