@@ -206,6 +206,18 @@ return array (
   <a href="/equipment.php?lang=en" hreflang="en" lang="en" class="">EN</a>' => '<a href="/equipment.php?lang=de" hreflang="de" lang="de" class="active">DE</a>
   
   <a href="/equipment.php?lang=en" hreflang="en" lang="en" class="">EN</a>',
+  '<a href="/forgot.php" class="cg-login-btn text-decoration-none mt-3">
+        <i class="fas fa-paper-plane me-2"></i>Neuen Link anfordern
+      </a>' => '<a href="/forgot.php" class="cg-login-btn text-decoration-none mt-3">
+        Request a
+        <i class="fas fa-paper-plane me-2"></i>
+        new link
+      </a>',
+  '<a href="/forgot.php" style="font-size:.85rem;font-weight:600;">Passwort vergessen?</a>' => '<a href="/forgot.php" style="font-size:.85rem;font-weight:600;">Forgotten your password?</a>',
+  '<a href="/forgot.php?lang=de" hreflang="de" lang="de" class="active">DE</a>
+  <a href="/forgot.php?lang=en" hreflang="en" lang="en" class="">EN</a>' => '<a href="/forgot.php?lang=de" hreflang="de" lang="de" class="active">DE</a>
+  
+  <a href="/forgot.php?lang=en" hreflang="en" lang="en" class="">EN</a>',
   '<a href="/hinweise.php"    class="cg-footer-copy cg-footer-mini">Hinweise</a>
         <a href="/impressum.php"   class="cg-footer-copy cg-footer-mini">Impressum</a>
         <a href="/datenschutz.php" class="cg-footer-copy cg-footer-mini">Datenschutz</a>
@@ -230,6 +242,7 @@ return array (
   <a href="/index.php?lang=en" hreflang="en" lang="en" class="">EN</a>' => '<a href="/index.php?lang=de" hreflang="de" lang="de" class="active">DE</a>
   
   <a href="/index.php?lang=en" hreflang="en" lang="en" class="">EN</a>',
+  '<a href="/login.php" style="font-weight:600;">Zurück zum Login</a>' => '<a href="/login.php" style="font-weight:600;">Back to the login page</a>',
   '<a href="/login.php?lang=de" hreflang="de" lang="de" class="active">DE</a>
   <a href="/login.php?lang=en" hreflang="en" lang="en" class="">EN</a>' => '<a href="/login.php?lang=de" hreflang="de" lang="de" class="active">DE</a>
   
@@ -244,6 +257,10 @@ return array (
   <a href="/register.php?lang=en" hreflang="en" lang="en" class="">EN</a>' => '<a href="/register.php?lang=de" hreflang="de" lang="de" class="active">DE</a>
   
   <a href="/register.php?lang=en" hreflang="en" lang="en" class="">EN</a>',
+  '<a href="/reset.php?token=bad&amp;lang=de" hreflang="de" lang="de" class="active">DE</a>
+  <a href="/reset.php?token=bad&amp;lang=en" hreflang="en" lang="en" class="">EN</a>' => '<a href="/reset.php?token=bad&amp;lang=de" hreflang="de" lang="de" class="active">DE</a>
+  
+  <a href="/reset.php?token=bad&amp;lang=en" hreflang="en" lang="en" class="">EN</a>',
   '<a href="/verify.php?token=bad&amp;lang=de" hreflang="de" lang="de" class="active">DE</a>
   <a href="/verify.php?token=bad&amp;lang=en" hreflang="en" lang="en" class="">EN</a>' => '<a href="/verify.php?token=bad&amp;lang=de" hreflang="de" lang="de" class="active">DE</a>
   
@@ -364,6 +381,8 @@ return array (
   '<i class="fas fa-circle-check me-2"></i>Datenbankfehler. Bitte später erneut versuchen.' => '<i class="fas fa-circle-check me-2"></i>Database error. Please try again later.',
   '<i class="fas fa-circle-check me-2"></i>Dein Account ist deaktiviert. Bitte kontaktiere uns.' => '<i class="fas fa-circle-check me-2"></i>Your account has been deactivated. Please contact us.',
   '<i class="fas fa-circle-check me-2"></i>Dein Passwort wurde geändert.' => '<i class="fas fa-circle-check me-2"></i>Your password has been changed.',
+  '<i class="fas fa-circle-check me-2"></i>Dein Passwort wurde geändert. Du kannst dich jetzt anmelden.' => '<i class="fas fa-circle-check me-2"></i>Your password has been changed. You can now log in.',
+  '<i class="fas fa-circle-check me-2"></i>Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.' => '<i class="fas fa-circle-check me-2"></i>The link is invalid or has expired. Please request a new one.',
   '<i class="fas fa-circle-check me-2"></i>Die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuche es später erneut.' => '<i class="fas fa-circle-check me-2"></i>The confirmation email could not be sent. Please try again later.',
   '<i class="fas fa-circle-check me-2"></i>Die Sitzung ist abgelaufen. Bitte versuche es erneut.' => '<i class="fas fa-circle-check me-2"></i>Your session has expired. Please try again.',
   '<i class="fas fa-circle-check me-2"></i>Die neuen Passwörter stimmen nicht überein.' => '<i class="fas fa-circle-check me-2"></i>The new passwords do not match.',
@@ -371,6 +390,7 @@ return array (
   '<i class="fas fa-circle-check me-2"></i>Registrierung fehlgeschlagen. Bitte später erneut versuchen.' => '<i class="fas fa-circle-check me-2"></i>Registration failed. Please try again later.',
   '<i class="fas fa-circle-check me-2"></i>Ungültige E-Mail-Adresse.' => '<i class="fas fa-circle-check me-2"></i>Invalid email address.',
   '<i class="fas fa-circle-check me-2"></i>Vorname muss 2–64 Zeichen lang sein und darf nur Buchstaben enthalten.' => '<i class="fas fa-circle-check me-2"></i>The first name must be between 2 and 64 characters long and may only contain letters.',
+  '<i class="fas fa-circle-check me-2"></i>Zu viele Anfragen. Bitte versuche es später erneut.' => '<i class="fas fa-circle-check me-2"></i>Too many requests. Please try again later.',
   '<i class="fas fa-circle-check me-2"></i>Zu viele Fehlversuche. Bitte warte 15 Minuten und versuche es dann erneut.' => '<i class="fas fa-circle-check me-2"></i>Too many failed attempts. Please wait 15 minutes and then try again.',
   '<i class="fas fa-circle-check me-2"></i>Zu viele Fehlversuche. Bitte warte 15 Minuten.' => '<i class="fas fa-circle-check me-2"></i>Too many failed attempts. Please wait 15 minutes.',
   '<i class="fas fa-circle-check me-2"></i>Zu viele Registrierungen von deiner Adresse. Bitte versuche es später erneut.' => 'There have been <i class="fas fa-circle-check me-2"></i>too many registrations from your address. Please try again later.',
@@ -388,6 +408,8 @@ return array (
   '<i class="fas fa-envelope-circle-check me-2"></i>Datenbankfehler. Bitte später erneut versuchen.' => '<i class="fas fa-envelope-circle-check me-2"></i>Database error. Please try again later.',
   '<i class="fas fa-envelope-circle-check me-2"></i>Dein Account ist deaktiviert. Bitte kontaktiere uns.' => '<i class="fas fa-envelope-circle-check me-2"></i>Your account has been deactivated. Please contact us.',
   '<i class="fas fa-envelope-circle-check me-2"></i>Dein Passwort wurde geändert.' => '<i class="fas fa-envelope-circle-check me-2"></i>Your password has been changed.',
+  '<i class="fas fa-envelope-circle-check me-2"></i>Dein Passwort wurde geändert. Du kannst dich jetzt anmelden.' => '<i class="fas fa-envelope-circle-check me-2"></i>Your password has been changed. You can now log in.',
+  '<i class="fas fa-envelope-circle-check me-2"></i>Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.' => '<i class="fas fa-envelope-circle-check me-2"></i>The link is invalid or has expired. Please request a new one.',
   '<i class="fas fa-envelope-circle-check me-2"></i>Die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuche es später erneut.' => '<i class="fas fa-envelope-circle-check me-2"></i>The confirmation email could not be sent. Please try again later.',
   '<i class="fas fa-envelope-circle-check me-2"></i>Die Sitzung ist abgelaufen. Bitte versuche es erneut.' => '<i class="fas fa-envelope-circle-check me-2"></i>The session has expired. Please try again.',
   '<i class="fas fa-envelope-circle-check me-2"></i>Die neuen Passwörter stimmen nicht überein.' => '<i class="fas fa-envelope-circle-check me-2"></i>The new passwords do not match.',
@@ -395,6 +417,7 @@ return array (
   '<i class="fas fa-envelope-circle-check me-2"></i>Registrierung fehlgeschlagen. Bitte später erneut versuchen.' => '<i class="fas fa-envelope-circle-check me-2"></i>Registration failed. Please try again later.',
   '<i class="fas fa-envelope-circle-check me-2"></i>Ungültige E-Mail-Adresse.' => '<i class="fas fa-envelope-circle-check me-2"></i>Invalid email address.',
   '<i class="fas fa-envelope-circle-check me-2"></i>Vorname muss 2–64 Zeichen lang sein und darf nur Buchstaben enthalten.' => '<i class="fas fa-envelope-circle-check me-2"></i>The first name must be between 2 and 64 characters long and may only contain letters.',
+  '<i class="fas fa-envelope-circle-check me-2"></i>Zu viele Anfragen. Bitte versuche es später erneut.' => '<i class="fas fa-envelope-circle-check me-2"></i>Too many requests. Please try again later.',
   '<i class="fas fa-envelope-circle-check me-2"></i>Zu viele Fehlversuche. Bitte warte 15 Minuten und versuche es dann erneut.' => '<i class="fas fa-envelope-circle-check me-2"></i>Too many failed attempts. Please wait 15 minutes and then try again.',
   '<i class="fas fa-envelope-circle-check me-2"></i>Zu viele Fehlversuche. Bitte warte 15 Minuten.' => '<i class="fas fa-envelope-circle-check me-2"></i>Too many failed attempts. Please wait 15 minutes.',
   '<i class="fas fa-envelope-circle-check me-2"></i>Zu viele Registrierungen von deiner Adresse. Bitte versuche es später erneut.' => 'There have been <i class="fas fa-envelope-circle-check me-2"></i>too many registrations from your address. Please try again later.',
@@ -409,6 +432,8 @@ return array (
   '<i class="fas fa-exclamation-circle me-2"></i>Datenbankfehler. Bitte später erneut versuchen.' => '<i class="fas fa-exclamation-circle me-2"></i>Database error. Please try again later.',
   '<i class="fas fa-exclamation-circle me-2"></i>Dein Account ist deaktiviert. Bitte kontaktiere uns.' => '<i class="fas fa-exclamation-circle me-2"></i>Your account has been deactivated. Please contact us.',
   '<i class="fas fa-exclamation-circle me-2"></i>Dein Passwort wurde geändert.' => '<i class="fas fa-exclamation-circle me-2"></i>Your password has been changed.',
+  '<i class="fas fa-exclamation-circle me-2"></i>Dein Passwort wurde geändert. Du kannst dich jetzt anmelden.' => '<i class="fas fa-exclamation-circle me-2"></i>Your password has been changed. You can now log in.',
+  '<i class="fas fa-exclamation-circle me-2"></i>Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.' => '<i class="fas fa-exclamation-circle me-2"></i>The link is invalid or has expired. Please request a new one.',
   '<i class="fas fa-exclamation-circle me-2"></i>Die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuche es später erneut.' => '<i class="fas fa-exclamation-circle me-2"></i>The confirmation email could not be sent. Please try again later.',
   '<i class="fas fa-exclamation-circle me-2"></i>Die Sitzung ist abgelaufen. Bitte versuche es erneut.' => '<i class="fas fa-exclamation-circle me-2"></i>Your session has expired. Please try again.',
   '<i class="fas fa-exclamation-circle me-2"></i>Die neuen Passwörter stimmen nicht überein.' => '<i class="fas fa-exclamation-circle me-2"></i>The new passwords do not match.',
@@ -416,6 +441,7 @@ return array (
   '<i class="fas fa-exclamation-circle me-2"></i>Registrierung fehlgeschlagen. Bitte später erneut versuchen.' => '<i class="fas fa-exclamation-circle me-2"></i>Registration failed. Please try again later.',
   '<i class="fas fa-exclamation-circle me-2"></i>Ungültige E-Mail-Adresse.' => '<i class="fas fa-exclamation-circle me-2"></i>Invalid email address.',
   '<i class="fas fa-exclamation-circle me-2"></i>Vorname muss 2–64 Zeichen lang sein und darf nur Buchstaben enthalten.' => '<i class="fas fa-exclamation-circle me-2"></i>The first name must be between 2 and 64 characters long and may only contain letters.',
+  '<i class="fas fa-exclamation-circle me-2"></i>Zu viele Anfragen. Bitte versuche es später erneut.' => '<i class="fas fa-exclamation-circle me-2"></i>Too many requests. Please try again later.',
   '<i class="fas fa-exclamation-circle me-2"></i>Zu viele Fehlversuche. Bitte warte 15 Minuten und versuche es dann erneut.' => '<i class="fas fa-exclamation-circle me-2"></i>Too many failed attempts. Please wait 15 minutes and then try again.',
   '<i class="fas fa-exclamation-circle me-2"></i>Zu viele Fehlversuche. Bitte warte 15 Minuten.' => '<i class="fas fa-exclamation-circle me-2"></i>Too many failed attempts. Please wait 15 minutes.',
   '<i class="fas fa-exclamation-circle me-2"></i>Zu viele Registrierungen von deiner Adresse. Bitte versuche es später erneut.' => 'There have been <i class="fas fa-exclamation-circle me-2"></i>too many registrations from your address. Please try again later.',
@@ -433,6 +459,7 @@ return array (
                     Widerspruchsrecht (Art. 21 DSGVO)' => '<i class="fas fa-hand me-2" style="color:var(--cg-red);"></i>
                     Right to object (Article 21 of the GDPR)',
   '<i class="fas fa-key me-2 cg-red"></i>Passwort ändern' => 'Change <i class="fas fa-key me-2 cg-red"></i>password',
+  '<i class="fas fa-paper-plane me-2"></i>Link anfordern' => 'Request a <i class="fas fa-paper-plane me-2"></i>link',
   '<i class="fas fa-pause me-2" style="color:var(--cg-red);"></i>
                     Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)' => '<i class="fas fa-pause me-2" style="color:var(--cg-red);"></i>
                     Right to restriction of processing (Article 18 of the GDPR)',
@@ -590,12 +617,14 @@ return array (
   'Dein Benutzername' => 'Your username',
   'Dein Passwort' => 'Your password',
   'Dein Passwort wurde geändert.' => 'Your password has been changed.',
+  'Dein Passwort wurde geändert. Du kannst dich jetzt anmelden.' => 'Your password has been changed. You can now log in.',
   'Deine E-Mail-Adresse' => 'Your email address',
   'Der Betreiber bemüht sich um eine kontinuierliche Verfügbarkeit der Website, übernimmt
               jedoch keine Garantie für unterbrechungsfreien Betrieb. Wartungsarbeiten oder technische
               Störungen können zu vorübergehenden Ausfällen führen.' => 'The operator endeavours to ensure the website is available at all times, but
               cannot guarantee uninterrupted operation. Maintenance work or technical
               faults may result in temporary outages.',
+  'Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.' => 'The link is invalid or has expired. Please request a new one.',
   'Der offizielle Server von Chris_Gaming445' => 'Chris_Gaming445’s official server',
   'Die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuche es später erneut.' => 'The confirmation email could not be sent. Please try again later.',
   'Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:
@@ -681,6 +710,7 @@ return array (
   'Dieser Bestätigungslink ist ungültig oder wurde bereits verwendet.' => 'This verification link is invalid or has already been used.',
   'E-Mail' => 'Email',
   'E-Mail bestätigen | Chris_Gaming445' => 'Confirm email | Chris_Gaming445',
+  'E-Mail-Adresse' => 'Email address',
   'EU-Streitschlichtung' => 'EU dispute resolution',
   'Entdecke meinen Content' => 'Discover my content',
   'Equipment-Liste' => 'Equipment list',
@@ -748,6 +778,7 @@ return array (
   'Impressum | Chris_Gaming445' => 'Legal Notice | Chris_Gaming445',
   'Kein kommerzielles Angebot' => 'Not a commercial offer',
   'Kontakt' => 'Contact',
+  'Lege jetzt dein neues Passwort fest' => 'Set your new password now',
   'Lerne Christian aka Chris_Gaming445 kennen – Streamer, Gamer und IT-Systemtechniker aus Tirol.' => 'Meet Christian, also known as Chris_Gaming445 – a streamer, gamer and IT systems engineer from Tyrol.',
   'Login' => 'Log in',
   'Login | Chris_Gaming445' => 'Log in | Chris_Gaming445',
@@ -787,6 +818,7 @@ return array (
               folge mir auf meinen Socials für Updates!' => 'New projects are added all the time. Do pop by regularly or
               follow me on social media for updates!',
   'Neues Passwort' => 'New password',
+  'Neues Passwort festlegen | Chris_Gaming445' => 'Set a new password | Chris_Gaming445',
   'Neugierig geworden?' => 'Has this sparked your curiosity?',
   'Neuigkeiten &amp; Ankündigungen' => 'News &amp; Announcements',
   'Noch kein Konto?
@@ -826,6 +858,8 @@ return array (
               no connection is established to Google or CDN servers.',
   'PC 1 – Meine PC-Teile' => 'PC 1 – My PC components',
   'Passwort' => 'Password',
+  'Passwort vergessen' => 'Forgotten your password?',
+  'Passwort vergessen | Chris_Gaming445' => 'Forgotten password | Chris_Gaming445',
   'Privates, nicht-kommerzielles Angebot einer Privatperson ohne gewerbliche Zwecke.' => 'A private, non-commercial offer made by a private individual for non-commercial purposes.',
   'Projekt hinzufügen' => 'Add a project',
   'Projekte' => 'Projects',
@@ -967,6 +1001,7 @@ return array (
   'Willkommen auf der offiziellen Website von Chris_Gaming445 – Streamer, Gamer und IT-Systemtechniker aus Tirol.' => 'Welcome to the official website of Chris_Gaming445 – streamer, gamer and IT systems engineer from Tyrol.',
   'Willkommen im exklusiven Bereich &ndash; nur für registrierte Mitglieder.' => 'Welcome to the exclusive area – for registered members only.',
   'Willkommen zurück,' => 'Welcome back,',
+  'Wir schicken dir einen Link zum Zurücksetzen' => 'We’ll send you a link to reset your password',
   'YouTube Channel' => 'YouTube channel',
   'Zu meinen Hauptinteressen zählen die IT und PC-Spiele. Diese Interessen haben mich dazu
               gebracht, meine Freizeit mit Aktivitäten zu füllen, die sowohl kreativ als auch technisch
@@ -977,6 +1012,7 @@ return array (
               challenging. My hobbies include streaming, programming and development.
               I really enjoy constantly improving my skills in these areas
               and taking on new challenges.',
+  'Zu viele Anfragen. Bitte versuche es später erneut.' => 'Too many requests. Please try again later.',
   'Zu viele Fehlversuche. Bitte warte 15 Minuten und versuche es dann erneut.' => 'Too many failed attempts. Please wait 15 minutes and then try again.',
   'Zu viele Fehlversuche. Bitte warte 15 Minuten.' => 'Too many failed attempts. Please wait 15 minutes.',
   'Zu viele Registrierungen von deiner Adresse. Bitte versuche es später erneut.' => 'There have been too many registrations from your address. Please try again later.',

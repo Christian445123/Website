@@ -22,5 +22,8 @@ return [
     'Vorname muss 2–64 Zeichen lang sein und darf nur Buchstaben enthalten.',
     'Zu viele Fehlversuche. Bitte warte 15 Minuten und versuche es dann erneut.',
     'Zu viele Fehlversuche. Bitte warte 15 Minuten.',
+    'Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.',
+    'Zu viele Anfragen. Bitte versuche es später erneut.',
+    'Dein Passwort wurde geändert. Du kannst dich jetzt anmelden.',
     'Zu viele Registrierungen von deiner Adresse. Bitte versuche es später erneut.',
 ];

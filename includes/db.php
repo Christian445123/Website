@@ -61,7 +61,7 @@ function db(): ?PDO
 }
 
 /** Schema-Version: bei Änderungen an db_migrate() erhöhen. */
-const CG_SCHEMA_VERSION = 4;
+const CG_SCHEMA_VERSION = 5;
 
 /**
  * Führt db_migrate() nur aus, wenn tmp/.schema_v<N> fehlt – spart ~10 DDL-Queries pro Request.
@@ -187,6 +187,21 @@ function db_migrate(PDO $pdo): bool
                 PRIMARY KEY (`id`),
                 INDEX `idx_kind_ip`      (`kind`, `ip_hash`, `attempted_at`),
                 INDEX `idx_kind_subject` (`kind`, `subject_hash`, `attempted_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+
+        // ── password_resets (Passwort-vergessen-Tokens, nur als Hash gespeichert) ──
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `password_resets` (
+                `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `user_id`    INT UNSIGNED    NOT NULL,
+                `token_hash` CHAR(64)        NOT NULL,
+                `expires_at` INT UNSIGNED    NOT NULL,
+                `used_at`    INT UNSIGNED        NULL,
+                `created_at` INT UNSIGNED    NOT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `uk_token_hash` (`token_hash`),
+                INDEX `idx_user` (`user_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
 

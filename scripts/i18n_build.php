@@ -33,7 +33,7 @@ $apiHost = str_ends_with($key, ':fx') ? 'api-free.deepl.com' : 'api.deepl.com';
 $pages = [
     'index.php', 'vorstellung.php', 'cgprojekte.php', 'equipment.php', 'hinweise.php', 'impressum.php',
     'datenschutz.php', 'dsgvo.php', 'login.php', 'register.php', 'verify.php?token=bad',
-    'community.php', 'dashboard.php',
+    'community.php', 'dashboard.php', 'forgot.php', 'reset.php?token=bad',
 ];
 
 function fetch_page(string $url, string $jar): string

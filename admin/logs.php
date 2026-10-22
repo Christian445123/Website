@@ -15,7 +15,7 @@ $offset      = ($page - 1) * $perPage;
 
 // Event-Kategorien für das Filter-Dropdown
 $eventGroups = [
-    'Auth'          => ['login.success','login.failed','login.unverified','login.inactive','login.throttled','logout','session.expired','account.password_changed'],
+    'Auth'          => ['login.success','login.failed','login.unverified','login.inactive','login.throttled','logout','session.expired','account.password_changed','account.password_reset_requested','account.password_reset_done','account.password_reset_failed'],
     'Registrierung' => ['register.success','register.email_taken','register.failed'],
     'Verifizierung' => ['verify.success','verify.failed','verify.expired','verify.already'],
     'Sicherheit'    => ['rate_limit.hit','access.denied'],

@@ -32,6 +32,9 @@ const LOG_LOGIN_INACTIVE       = 'login.inactive';
 const LOG_LOGOUT               = 'logout';
 const LOG_LOGIN_THROTTLED      = 'login.throttled';
 const LOG_PASSWORD_CHANGED     = 'account.password_changed';
+const LOG_PASSWORD_RESET_REQ   = 'account.password_reset_requested';
+const LOG_PASSWORD_RESET_DONE  = 'account.password_reset_done';
+const LOG_PASSWORD_RESET_FAIL  = 'account.password_reset_failed';
 
 // ── Registrierung ───────────────────────────────────────────────
 const LOG_REGISTER_SUCCESS     = 'register.success';
@@ -123,6 +126,12 @@ function cg_log_meta(string $event): array
             => ['level' => 'info',     'color' => 0x2F9E44, 'emoji' => '✅', 'label' => 'Login erfolgreich'],
         $event === LOG_LOGOUT
             => ['level' => 'info',     'color' => 0x2F9E44, 'emoji' => '👋', 'label' => 'Logout'],
+        $event === LOG_PASSWORD_RESET_REQ
+            => ['level' => 'info',     'color' => 0x5865F2, 'emoji' => '📨', 'label' => 'Passwort-Reset angefordert'],
+        $event === LOG_PASSWORD_RESET_DONE
+            => ['level' => 'warning',  'color' => 0xFAB005, 'emoji' => '🔑', 'label' => 'Passwort per Reset-Link geändert'],
+        $event === LOG_PASSWORD_RESET_FAIL
+            => ['level' => 'warning',  'color' => 0xFAB005, 'emoji' => '🚫', 'label' => 'Passwort-Reset: ungültiger/abgelaufener Link'],
         $event === LOG_PASSWORD_CHANGED
             => ['level' => 'info',     'color' => 0x5865F2, 'emoji' => '🔑', 'label' => 'Passwort geändert'],
         $event === LOG_VERIFY_SUCCESS

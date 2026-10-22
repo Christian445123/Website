@@ -44,6 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <p class="cg-login-sub">Melde dich mit deinem Account an</p>
     </div>
 
+    <?php if (isset($_GET['reset']) && $error === ''): ?>
+      <div class="cg-login-success" role="status">
+        <i class="fas fa-circle-check me-2"></i>Dein Passwort wurde geändert. Du kannst dich jetzt anmelden.
+      </div>
+    <?php endif; ?>
+
     <?php if ($error !== ''): ?>
       <div class="cg-login-error" role="alert">
         <i class="fas fa-exclamation-circle me-2"></i><?= e($error) ?>
@@ -73,6 +79,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  maxlength="1024" autocomplete="current-password" required>
         </div>
       </div>
+
+      <p class="text-end mb-0" style="margin-top:-.5rem;">
+        <a href="/forgot.php" style="font-size:.85rem;font-weight:600;">Passwort vergessen?</a>
+      </p>
 
       <button type="submit" class="cg-login-btn">
         <i class="fas fa-sign-in-alt me-2"></i>Anmelden
