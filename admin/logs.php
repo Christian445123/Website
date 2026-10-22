@@ -1,4 +1,5 @@
 <?php
+$noindex = true;
 $pageTitle = 'Admin &ndash; Activity Log';
 require_once __DIR__ . '/../includes/head.php';
 auth_require_role('admin');
@@ -14,7 +15,7 @@ $offset      = ($page - 1) * $perPage;
 
 // Event-Kategorien für das Filter-Dropdown
 $eventGroups = [
-    'Auth'          => ['login.success','login.failed','login.unverified','login.inactive','logout','session.expired'],
+    'Auth'          => ['login.success','login.failed','login.unverified','login.inactive','login.throttled','logout','session.expired','account.password_changed'],
     'Registrierung' => ['register.success','register.email_taken','register.failed'],
     'Verifizierung' => ['verify.success','verify.failed','verify.expired','verify.already'],
     'Sicherheit'    => ['rate_limit.hit','access.denied'],
@@ -38,12 +39,6 @@ if ($pdo !== null) {
             $where   .= ' AND `ip` LIKE ?';
             $params[] = '%' . $filterIp . '%';
         }
-
-        $totalCount = (int) $pdo->prepare(
-            "SELECT COUNT(*) FROM `activity_log` WHERE {$where}"
-        )->execute($params) ? $pdo->prepare(
-            "SELECT COUNT(*) FROM `activity_log` WHERE {$where}"
-        )->execute($params) || true : 0;
 
         // Re-count cleanly
         $countStmt = $pdo->prepare("SELECT COUNT(*) FROM `activity_log` WHERE {$where}");
@@ -87,7 +82,7 @@ function log_badge_class(string $event): string
 ?>
 <?php require_once __DIR__ . '/../includes/navbar.php'; ?>
 
-<main>
+<main id="main">
   <section class="cg-page-hero">
     <div class="container">
       <span class="cg-section-label" style="color:var(--cg-red);">Administrator</span>
@@ -106,10 +101,10 @@ function log_badge_class(string $event): string
           <select name="event" class="form-select form-select-sm" style="background:#1e1e22;color:#e8e8ed;border-color:rgba(255,255,255,.1)">
             <option value="">— Alle Events —</option>
             <?php foreach ($eventGroups as $group => $events): ?>
-              <optgroup label="<?= htmlspecialchars($group) ?>">
+              <optgroup label="<?= e($group) ?>">
                 <?php foreach ($events as $ev): ?>
-                  <option value="<?= htmlspecialchars($ev) ?>" <?= $filterEvent === $ev ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($ev) ?>
+                  <option value="<?= e($ev) ?>" <?= $filterEvent === $ev ? 'selected' : '' ?>>
+                    <?= e($ev) ?>
                   </option>
                 <?php endforeach; ?>
               </optgroup>
@@ -119,7 +114,7 @@ function log_badge_class(string $event): string
         <div class="col-md-3">
           <label class="form-label" style="color:#8b8b9a;font-size:.85rem;">IP-Adresse</label>
           <input type="text" name="ip" class="form-control form-control-sm"
-                 placeholder="z.B. 192.168." value="<?= htmlspecialchars($filterIp) ?>"
+                 placeholder="z.B. 192.168." value="<?= e($filterIp) ?>"
                  style="background:#1e1e22;color:#e8e8ed;border-color:rgba(255,255,255,.1)">
         </div>
         <div class="col-md-auto d-flex gap-2">
@@ -157,25 +152,25 @@ function log_badge_class(string $event): string
               <?php foreach ($entries as $e): ?>
               <tr>
                 <td style="padding:.65rem 1rem;color:#8b8b9a;white-space:nowrap">
-                  <?= htmlspecialchars(date('d.m.Y H:i:s', strtotime($e['created_at']))) ?>
+                  <?= e(date('d.m.Y H:i:s', strtotime($e['created_at']))) ?>
                 </td>
                 <td style="padding:.65rem 1rem">
                   <span class="badge bg-<?= log_badge_class($e['event']) ?>"
                         style="font-size:.75rem;font-weight:500">
-                    <?= htmlspecialchars($e['event']) ?>
+                    <?= e($e['event']) ?>
                   </span>
                 </td>
                 <td style="padding:.65rem 1rem">
                   <code style="color:#a9b1d6;background:rgba(255,255,255,.05);
                                padding:.15rem .4rem;border-radius:.25rem;font-size:.8rem">
-                    <?= htmlspecialchars($e['ip']) ?>
+                    <?= e($e['ip']) ?>
                   </code>
                 </td>
                 <td style="padding:.65rem 1rem">
                   <?php if ($e['username']): ?>
                     <span style="color:#e8e8ed">
                       <i class="fas fa-user-circle me-1" style="color:var(--cg-red);font-size:.8rem"></i>
-                      <?= htmlspecialchars($e['username']) ?>
+                      <?= e($e['username']) ?>
                       <span style="color:#555;font-size:.75rem"> #<?= (int) $e['user_id'] ?></span>
                     </span>
                   <?php else: ?>
@@ -191,8 +186,8 @@ function log_badge_class(string $event): string
                           <span style="background:rgba(255,255,255,.05);border-radius:.25rem;
                                        padding:.1rem .35rem;margin-right:.25rem;display:inline-block;
                                        margin-bottom:.15rem">
-                            <span style="color:#555"><?= htmlspecialchars($k) ?>:</span>
-                            <span style="color:#a9b1d6"><?= htmlspecialchars(is_array($v) ? json_encode($v) : (string)$v) ?></span>
+                            <span style="color:#555"><?= e($k) ?>:</span>
+                            <span style="color:#a9b1d6"><?= e(is_array($v) ? json_encode($v) : (string)$v) ?></span>
                           </span>
                         <?php endforeach; ?>
                       </span>

@@ -8,7 +8,12 @@ tmp/
 
 # Composer-Abhängigkeiten
 vendor/
-.env
+
+# Lokale Dev-Dateien
+.env.*
+*.log
+.claude/
 encrypt_env.php
-includes/env.php
-.env
+
+# DeepL-Key (nur lokal, nie committen)
+.deepl_key

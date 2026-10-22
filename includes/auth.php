@@ -1,25 +1,25 @@
 <?php
 /**
- * Authentication Helper (Login Foundation)
- * -----------------------------------------
- * Provides session management, login/logout logic and
- * access guards for a future login system.
+ * Authentication Helper
+ * ---------------------
+ * Session-Management, Login/Logout, Registrierung, Passwortwechsel und
+ * Zugriffs-Guards.
  *
  * Usage:
  *   require_once __DIR__ . '/auth.php';
  *
- *   // Require a logged-in user (redirects to login.php otherwise):
- *   auth_require_login();
- *
- *   // Require a specific role:
- *   auth_require_role('admin');
- *
- *   // Check inside a template:
+ *   auth_require_login();          // leitet auf login.php um
+ *   auth_require_role('admin');    // 403 bei fehlender Rolle
  *   if (auth_check()) { … }
- *   $user = auth_user(); // array from DB or null
+ *   $user = auth_user();           // array aus der DB oder null
  *
- * Database dependency:
- *   Reads from the `users` table – see sql/setup.sql.
+ * Sicherheitsmerkmale:
+ *   - __Host- Session-Cookie (Secure, HttpOnly, SameSite=Strict), Strict-Mode
+ *   - Idle- (2 h) und absolutes Session-Timeout (12 h), regelmäßige ID-Rotation
+ *   - Rolle/Status werden bei jedem Request frisch aus der DB gelesen
+ *   - Login-Throttling pro IP und Benutzername, Registrierungs-Limit pro IP
+ *   - bcrypt (Cost 12) mit automatischem Rehash, Timing-sicherer Dummy-Vergleich
+ *   - Verifizierungs-Token werden nur als SHA-256-Hash gespeichert
  */
 
 declare(strict_types=1);
@@ -27,70 +27,114 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/logger.php'; // Activity Logger
 
+const CG_SESSION_IDLE   = 7200;   // 2 Stunden Inaktivität
+const CG_SESSION_MAX    = 43200;  // 12 Stunden absolut
+const CG_SESSION_ROTATE = 900;    // Session-ID alle 15 Minuten erneuern
+
+const CG_LOGIN_WINDOW        = 900;   // 15 Minuten
+const CG_LOGIN_MAX_PER_IP    = 10;
+const CG_LOGIN_MAX_PER_USER  = 25;
+const CG_REGISTER_WINDOW     = 3600;  // 1 Stunde
+const CG_REGISTER_MAX_PER_IP = 3;
+
+const CG_BCRYPT_COST    = 12;
+const CG_PASSWORD_MIN   = 12;
+/** Gültiger bcrypt-Hash eines Zufallswerts – für den Timing-sicheren Dummy-Vergleich. */
+const CG_DUMMY_HASH     = '$2y$12$xqOe2KPPfrqrVICiD0R3TumuT3b0Y8Tiu0nfSYGGr5AvT0oKKLfMq';
+
 // ── Session bootstrap ─────────────────────────────────────────────
-if (session_status() === PHP_SESSION_NONE) {
+if (session_status() === PHP_SESSION_NONE && PHP_SAPI !== 'cli') {
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+    ini_set('session.use_trans_sid', '0');
+    ini_set('session.gc_maxlifetime', (string) CG_SESSION_IDLE);
+
+    session_name('__Host-cgsid');
     session_set_cookie_params([
-        'lifetime' => 0,           // until browser close
+        'lifetime' => 0,           // bis Browser geschlossen wird
         'path'     => '/',
-        'secure'   => true,        // HTTPS only – set false for local dev via HTTP
-        'httponly' => true,        // no JS access
+        'secure'   => true,        // nur HTTPS (Voraussetzung für __Host-)
+        'httponly' => true,        // kein JS-Zugriff
         'samesite' => 'Strict',
     ]);
     session_start();
+
+    $now = time();
+    if (isset($_SESSION['user_id'])) {
+        $idleFor = $now - (int) ($_SESSION['_last'] ?? $now);
+        $age     = $now - (int) ($_SESSION['_born'] ?? $now);
+        if ($idleFor > CG_SESSION_IDLE || $age > CG_SESSION_MAX) {
+            $_SESSION = [];
+            session_regenerate_id(true);
+        } elseif ($now - (int) ($_SESSION['_rotated'] ?? 0) > CG_SESSION_ROTATE) {
+            session_regenerate_id(true);
+            $_SESSION['_rotated'] = $now;
+        }
+    }
+    $_SESSION['_last'] = $now;
+    $_SESSION['_born'] ??= $now;
 }
 
 // ── Public helpers ────────────────────────────────────────────────
 
 /**
- * Returns true if a user is currently logged in.
+ * Returns true if a (still valid, active) user is currently logged in.
  */
 function auth_check(): bool
 {
-    return isset($_SESSION['user_id']);
+    return auth_user() !== null;
 }
 
 /**
- * Returns the current user's data (from session cache).
- * Null if not logged in.
+ * Returns the current user's data. Wird pro Request einmal frisch aus der DB
+ * gelesen, damit Rollenänderungen/Sperren sofort greifen.
+ * Null if not logged in (oder User gesperrt/gelöscht).
  *
  * @return array{id:int,username:string,email:string|null,role:string}|null
  */
 function auth_user(): ?array
 {
-    if (!auth_check()) {
+    if (!isset($_SESSION['user_id'])) {
+        return null;
+    }
+    if (array_key_exists('__cg_user', $GLOBALS)) {
+        return $GLOBALS['__cg_user'];
+    }
+
+    $pdo = db();
+    if ($pdo === null) {
+        return null; // fail closed
+    }
+
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT `id`, `username`, `email`, `role`
+             FROM `users`
+             WHERE `id` = ? AND `is_active` = 1 AND `email_verified` = 1
+             LIMIT 1'
+        );
+        $stmt->execute([(int) $_SESSION['user_id']]);
+        $row = $stmt->fetch();
+    } catch (Throwable) {
         return null;
     }
 
-    // Lazy-load from DB on first call within the request
-    if (!isset($_SESSION['_user_data'])) {
-        $pdo = db();
-        if ($pdo === null) {
-            return null;
-        }
-        try {
-            $stmt = $pdo->prepare(
-                'SELECT `id`, `username`, `email`, `role`
-                 FROM `users`
-                 WHERE `id` = ? AND `is_active` = 1
-                 LIMIT 1'
-            );
-            $stmt->execute([$_SESSION['user_id']]);
-            $row = $stmt->fetch();
-        } catch (Throwable) {
-            return null;
-        }
-
-        if ($row === false) {
-            // User was deleted / deactivated – force logout
-            cg_log(LOG_SESSION_EXPIRED, ['user_id' => $_SESSION['user_id'] ?? null]);
-            auth_logout();
-            return null;
-        }
-
-        $_SESSION['_user_data'] = $row;
+    if ($row === false) {
+        // User was deleted / deactivated – force logout
+        cg_log(LOG_SESSION_EXPIRED, ['user_id' => $_SESSION['user_id'] ?? null]);
+        auth_logout();
+        $GLOBALS['__cg_user'] = null;
+        return null;
     }
 
-    return $_SESSION['_user_data'];
+    return $GLOBALS['__cg_user'] = $row;
+}
+
+/** true, wenn der eingeloggte User Admin ist. */
+function auth_is_admin(): bool
+{
+    $u = auth_user();
+    return $u !== null && ($u['role'] ?? '') === 'admin';
 }
 
 /**
@@ -104,7 +148,7 @@ function auth_require_login(string $redirect = ''): void
         return;
     }
 
-    $back = $redirect !== '' ? $redirect : ($_SERVER['REQUEST_URI'] ?? '/');
+    $back = cg_safe_redirect($redirect !== '' ? $redirect : ($_SERVER['REQUEST_URI'] ?? '/'));
     header('Location: /login.php?redirect=' . urlencode($back));
     exit;
 }
@@ -121,23 +165,75 @@ function auth_require_role(string $requiredRole): void
 
     $hierarchy = ['user' => 0, 'moderator' => 1, 'admin' => 2];
     $user      = auth_user();
-    $userLevel = $hierarchy[$user['role']] ?? -1;
+    $userLevel = $hierarchy[$user['role'] ?? ''] ?? -1;
     $required  = $hierarchy[$requiredRole]  ?? 99;
 
     if ($userLevel < $required) {
         cg_log(LOG_ACCESS_DENIED, [
             'required_role' => $requiredRole,
             'user_role'     => $user['role'] ?? 'unknown',
-            'url'           => $_SERVER['REQUEST_URI'] ?? '',
+            'url'           => mb_substr((string) ($_SERVER['REQUEST_URI'] ?? ''), 0, 300),
         ]);
         http_response_code(403);
         exit(
             '<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>403</title></head>' .
-            '<body style="font-family:sans-serif;text-align:center;padding:4rem">' .
+            '<body style="font-family:sans-serif;text-align:center;padding:4rem;background:#090a0c;color:#eaeaef">' .
             '<h1>403 &ndash; Zugriff verweigert</h1>' .
             '<p>Du hast keine Berechtigung, diese Seite aufzurufen.</p>' .
             '</body></html>'
         );
+    }
+}
+
+// ── Throttling (login / register) ────────────────────────────────
+
+function auth_hash(string $value): string
+{
+    return hash('sha256', strtolower(trim($value)));
+}
+
+function auth_attempt_record(string $kind, string $subject = ''): void
+{
+    try {
+        db()?->prepare(
+            'INSERT INTO `auth_attempts` (`kind`, `ip_hash`, `subject_hash`, `attempted_at`) VALUES (?, ?, ?, ?)'
+        )->execute([$kind, auth_hash(cg_client_ip()), $subject === '' ? '' : auth_hash($subject), time()]);
+
+        // gelegentlich aufräumen
+        if (random_int(1, 50) === 1) {
+            db()?->prepare('DELETE FROM `auth_attempts` WHERE `attempted_at` < ?')->execute([time() - 86400]);
+        }
+    } catch (Throwable $e) {
+        error_log('[CG] auth_attempt_record: ' . $e->getMessage());
+    }
+}
+
+function auth_attempt_count(string $kind, string $column, string $hash, int $window): int
+{
+    if (!in_array($column, ['ip_hash', 'subject_hash'], true)) {
+        return 0;
+    }
+    try {
+        $stmt = db()?->prepare(
+            "SELECT COUNT(*) FROM `auth_attempts` WHERE `kind` = ? AND `{$column}` = ? AND `attempted_at` > ?"
+        );
+        if ($stmt === null) {
+            return 0;
+        }
+        $stmt->execute([$kind, $hash, time() - $window]);
+        return (int) $stmt->fetchColumn();
+    } catch (Throwable) {
+        return 0;
+    }
+}
+
+function auth_attempts_clear(string $kind, string $subject): void
+{
+    try {
+        db()?->prepare('DELETE FROM `auth_attempts` WHERE `kind` = ? AND `subject_hash` = ?')
+            ->execute([$kind, auth_hash($subject)]);
+    } catch (Throwable) {
+        // non-critical
     }
 }
 
@@ -151,13 +247,25 @@ function auth_require_role(string $requiredRole): void
  */
 function auth_login(string $username, string $password): bool|string
 {
-    if (trim($username) === '' || $password === '') {
-        return false;
+    $username = trim($username);
+    if ($username === '' || $password === '' || mb_strlen($username) > 64 || strlen($password) > 1024) {
+        return 'Benutzername oder Passwort falsch.';
     }
 
     $pdo = db();
     if ($pdo === null) {
-        return false;
+        return 'Datenbankfehler. Bitte später erneut versuchen.';
+    }
+
+    // ── Brute-Force-Schutz ────────────────────────────────────────
+    $ipHash   = auth_hash(cg_client_ip());
+    $userHash = auth_hash($username);
+    if (
+        auth_attempt_count('login', 'ip_hash',      $ipHash,   CG_LOGIN_WINDOW) >= CG_LOGIN_MAX_PER_IP ||
+        auth_attempt_count('login', 'subject_hash', $userHash, CG_LOGIN_WINDOW) >= CG_LOGIN_MAX_PER_USER
+    ) {
+        cg_log(LOG_LOGIN_THROTTLED, ['username' => mb_substr($username, 0, 64)]);
+        return 'Zu viele Fehlversuche. Bitte warte 15 Minuten und versuche es dann erneut.';
     }
 
     try {
@@ -167,21 +275,23 @@ function auth_login(string $username, string $password): bool|string
              WHERE `username` = ?
              LIMIT 1'
         );
-        $stmt->execute([trim($username)]);
+        $stmt->execute([$username]);
         $row = $stmt->fetch();
     } catch (Throwable) {
-        return false;
+        return 'Datenbankfehler. Bitte später erneut versuchen.';
     }
 
-    if ($row === false) {
-        // Constant-time dummy verify to prevent timing attacks
-        password_verify($password, '$2y$12$invaliddummyhashXXXXXXXXXXXXXXXXXXXXXXXX');
-        cg_log(LOG_LOGIN_FAILED, ['username' => $username, 'reason' => 'user_not_found']);
-        return 'Benutzername oder Passwort falsch.';
-    }
+    // Immer genau einen bcrypt-Vergleich durchführen (kein Timing-Orakel für Benutzernamen)
+    $hash  = $row !== false ? (string) $row['password_hash'] : CG_DUMMY_HASH;
+    $valid = password_verify($password, $hash);
 
-    if (!password_verify($password, $row['password_hash'])) {
-        cg_log(LOG_LOGIN_FAILED, ['username' => $username, 'reason' => 'wrong_password'], (int) $row['id']);
+    if ($row === false || !$valid) {
+        auth_attempt_record('login', $username);
+        cg_log(
+            LOG_LOGIN_FAILED,
+            ['username' => mb_substr($username, 0, 64), 'reason' => $row === false ? 'user_not_found' : 'wrong_password'],
+            $row === false ? null : (int) $row['id']
+        );
         return 'Benutzername oder Passwort falsch.';
     }
 
@@ -195,16 +305,25 @@ function auth_login(string $username, string $password): bool|string
         return 'Dein Account ist deaktiviert. Bitte kontaktiere uns.';
     }
 
-    // Regenerate session ID to prevent fixation
+    // Regenerate session ID to prevent fixation; alten Session-Inhalt verwerfen
     session_regenerate_id(true);
+    $_SESSION = [
+        'user_id'  => (int) $row['id'],
+        '_born'    => time(),
+        '_last'    => time(),
+        '_rotated' => time(),
+    ];
+    unset($GLOBALS['__cg_user']);
 
-    $_SESSION['user_id'] = (int) $row['id'];
-    unset($_SESSION['_user_data']); // force fresh DB load on auth_user()
+    auth_attempts_clear('login', $username);
 
-    // Update last_login timestamp
+    // Update last_login + ggf. Hash auf aktuellen Cost anheben
     try {
-        db()?->prepare('UPDATE `users` SET `last_login` = NOW() WHERE `id` = ?')
-            ->execute([$row['id']]);
+        $pdo->prepare('UPDATE `users` SET `last_login` = NOW() WHERE `id` = ?')->execute([$row['id']]);
+        if (password_needs_rehash((string) $row['password_hash'], PASSWORD_BCRYPT, ['cost' => CG_BCRYPT_COST])) {
+            $pdo->prepare('UPDATE `users` SET `password_hash` = ? WHERE `id` = ?')
+                ->execute([password_hash($password, PASSWORD_BCRYPT, ['cost' => CG_BCRYPT_COST]), $row['id']]);
+        }
     } catch (Throwable) {
         // non-critical, ignore
     }
@@ -241,6 +360,7 @@ function auth_generate_username(string $firstName, string $lastName, \PDO $pdo):
     if ($base === '.') {
         $base = 'user';
     }
+    $base = substr($base, 0, 56);
 
     $candidate = $base;
     $n         = 2;
@@ -256,14 +376,14 @@ function auth_generate_username(string $firstName, string $lastName, \PDO $pdo):
 }
 
 /**
- * Generate a secure random password (12 chars, no ambiguous chars).
+ * Generate a secure random password (16 chars, no ambiguous chars).
  */
 function auth_generate_password(): string
 {
     $chars    = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#%&';
     $len      = strlen($chars);
     $password = '';
-    for ($i = 0; $i < 12; $i++) {
+    for ($i = 0; $i < 16; $i++) {
         $password .= $chars[random_int(0, $len - 1)];
     }
     return $password;
@@ -321,9 +441,11 @@ function auth_send_verify_email(
         $mail->Body .= "Hier sind deine Zugangsdaten:\n";
         $mail->Body .= "  Benutzername: {$username}\n";
         $mail->Body .= "  Passwort:     {$password}\n\n";
-        $mail->Body .= "Bitte speichere diese Daten sicher ab.\n\n";
+        $mail->Body .= "Bitte ändere das Passwort nach dem ersten Login im Dashboard\n";
+        $mail->Body .= "und lösche diese E-Mail anschließend.\n\n";
         $mail->Body .= "Bestätige jetzt deine E-Mail-Adresse (Link gültig 24 Stunden):\n";
         $mail->Body .= "{$verifyUrl}\n\n";
+        $mail->Body .= "Falls du dich nicht registriert hast, ignoriere diese E-Mail einfach.\n\n";
         $mail->Body .= "Viele Grüße,\nChris";
 
         $mail->send();
@@ -337,14 +459,13 @@ function auth_send_verify_email(
 /**
  * Register a new user account.
  *
- * Generates username + password automatically.
- * Creates the account in an unverified state and sends a verification e-mail.
+ * Username + Passwort werden automatisch erzeugt und AUSSCHLIESSLICH per
+ * E-Mail zugestellt (nie im Browser angezeigt) – so kann niemand mit der
+ * Adresse eines Dritten einen Account anlegen und das Passwort mitlesen.
+ * Ist die E-Mail bereits vergeben, sieht der Besucher dieselbe Erfolgsmeldung
+ * (kein Account-Enumeration-Orakel).
  *
- * On success returns an array:
- *   ['username' => string, 'password' => string, 'email_sent' => bool]
- * On failure returns a string error message.
- *
- * @return array{username:string,password:string,email_sent:bool}|string
+ * @return array{email:string}|string  Erfolg: Array, Fehler: Meldung
  */
 function auth_register(string $firstName, string $lastName, string $email): array|string
 {
@@ -355,13 +476,14 @@ function auth_register(string $firstName, string $lastName, string $email): arra
     if ($firstName === '' || $lastName === '' || $email === '') {
         return 'Bitte alle Felder ausfüllen.';
     }
-    if (mb_strlen($firstName) < 2 || mb_strlen($firstName) > 64) {
-        return 'Vorname muss 2–64 Zeichen lang sein.';
+    $nameRe = '/^\p{L}[\p{L} .\'\-]*$/u';
+    if (mb_strlen($firstName) < 2 || mb_strlen($firstName) > 64 || !preg_match($nameRe, $firstName)) {
+        return 'Vorname muss 2–64 Zeichen lang sein und darf nur Buchstaben enthalten.';
     }
-    if (mb_strlen($lastName) < 2 || mb_strlen($lastName) > 64) {
-        return 'Nachname muss 2–64 Zeichen lang sein.';
+    if (mb_strlen($lastName) < 2 || mb_strlen($lastName) > 64 || !preg_match($nameRe, $lastName)) {
+        return 'Nachname muss 2–64 Zeichen lang sein und darf nur Buchstaben enthalten.';
     }
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if (strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         return 'Ungültige E-Mail-Adresse.';
     }
 
@@ -370,19 +492,26 @@ function auth_register(string $firstName, string $lastName, string $email): arra
         return 'Datenbankfehler. Bitte später erneut versuchen.';
     }
 
+    // Spam-/Mail-Bombing-Schutz
+    if (auth_attempt_count('register', 'ip_hash', auth_hash(cg_client_ip()), CG_REGISTER_WINDOW) >= CG_REGISTER_MAX_PER_IP) {
+        cg_log(LOG_REGISTER_FAILED, ['email' => $email, 'error' => 'throttled']);
+        return 'Zu viele Registrierungen von deiner Adresse. Bitte versuche es später erneut.';
+    }
+    auth_attempt_record('register', $email);
+
     try {
         // Check e-mail uniqueness
         $stmt = $pdo->prepare('SELECT `id` FROM `users` WHERE `email` = ? LIMIT 1');
         $stmt->execute([$email]);
         if ($stmt->fetch() !== false) {
             cg_log(LOG_REGISTER_EMAIL_TAKEN, ['email' => $email]);
-            return 'Diese E-Mail-Adresse ist bereits registriert.';
+            return ['email' => $email]; // gleiche Antwort wie bei Erfolg
         }
 
         $username = auth_generate_username($firstName, $lastName, $pdo);
         $password = auth_generate_password();
-        $hash     = password_hash($password, PASSWORD_BCRYPT);
-        $token    = bin2hex(random_bytes(32)); // 64-char hex token
+        $hash     = password_hash($password, PASSWORD_BCRYPT, ['cost' => CG_BCRYPT_COST]);
+        $token    = bin2hex(random_bytes(32)); // 64-char hex token (nur im Mail-Link)
 
         $insert = $pdo->prepare(
             'INSERT INTO `users`
@@ -391,31 +520,91 @@ function auth_register(string $firstName, string $lastName, string $email): arra
                   `password_hash`, `role`, `is_active`)
              VALUES (?, ?, ?, ?, 0, ?, ?, \'user\', 0)'
         );
-        $insert->execute([$username, $firstName, $lastName, $email, $token, $hash]);
+        $insert->execute([$username, $firstName, $lastName, $email, hash('sha256', $token), $hash]);
+        $newId = (int) $pdo->lastInsertId();
 
     } catch (\Throwable $e) {
-        $errMsg = $e->getMessage();
-        cg_log(LOG_REGISTER_FAILED, ['email' => $email, 'error' => $errMsg]);
-        // DEBUG: show real error (remove after fixing)
-        if ((string) env('APP_DEBUG', '') === 'true') {
-            return 'Registrierung fehlgeschlagen: ' . $errMsg;
-        }
+        cg_log(LOG_REGISTER_FAILED, ['email' => $email, 'error' => mb_substr($e->getMessage(), 0, 200)]);
         return 'Registrierung fehlgeschlagen. Bitte später erneut versuchen.';
     }
 
     $emailSent = auth_send_verify_email($email, $firstName, $username, $password, $token);
 
-    cg_log(LOG_REGISTER_SUCCESS, [
-        'username'   => $username,
-        'email'      => $email,
-        'email_sent' => $emailSent ? 'yes' : 'no',
-    ]);
+    if (!$emailSent) {
+        // Ohne zugestellte Mail kann der Account nie aktiviert werden → zurückrollen
+        try {
+            $pdo->prepare('DELETE FROM `users` WHERE `id` = ? AND `email_verified` = 0')->execute([$newId]);
+        } catch (\Throwable) {
+            // ignore
+        }
+        cg_log(LOG_REGISTER_FAILED, ['email' => $email, 'error' => 'mail_not_sent']);
+        return 'Die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuche es später erneut.';
+    }
 
-    return [
-        'username'   => $username,
-        'password'   => $password,
-        'email_sent' => $emailSent,
-    ];
+    cg_log(LOG_REGISTER_SUCCESS, ['username' => $username, 'email' => $email], $newId);
+
+    return ['email' => $email];
+}
+
+/**
+ * Passwort ändern (aktuelles Passwort muss stimmen).
+ *
+ * @return true|string  true bei Erfolg, sonst Fehlermeldung
+ */
+function auth_change_password(int $userId, string $current, string $new, string $confirm): bool|string
+{
+    if ($new !== $confirm) {
+        return 'Die neuen Passwörter stimmen nicht überein.';
+    }
+    if (mb_strlen($new) < CG_PASSWORD_MIN) {
+        return 'Das neue Passwort muss mindestens ' . CG_PASSWORD_MIN . ' Zeichen lang sein.';
+    }
+    if (strlen($new) > 128) {
+        return 'Das neue Passwort ist zu lang (max. 128 Zeichen).';
+    }
+    if ($new === $current) {
+        return 'Das neue Passwort muss sich vom aktuellen unterscheiden.';
+    }
+
+    $pdo = db();
+    if ($pdo === null) {
+        return 'Datenbankfehler. Bitte später erneut versuchen.';
+    }
+
+    // Schutz gegen Raten des aktuellen Passworts über eine gekaperte Session
+    $ipHash = auth_hash(cg_client_ip());
+    if (auth_attempt_count('login', 'ip_hash', $ipHash, CG_LOGIN_WINDOW) >= CG_LOGIN_MAX_PER_IP) {
+        return 'Zu viele Fehlversuche. Bitte warte 15 Minuten.';
+    }
+
+    try {
+        $stmt = $pdo->prepare('SELECT `username`, `password_hash` FROM `users` WHERE `id` = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch();
+    } catch (Throwable) {
+        return 'Datenbankfehler. Bitte später erneut versuchen.';
+    }
+
+    if ($row === false || !password_verify($current, (string) $row['password_hash'])) {
+        auth_attempt_record('login', (string) ($row['username'] ?? ''));
+        cg_log(LOG_LOGIN_FAILED, ['reason' => 'password_change_wrong_current'], $userId);
+        return 'Das aktuelle Passwort ist falsch.';
+    }
+    if (strcasecmp($new, (string) $row['username']) === 0) {
+        return 'Das Passwort darf nicht dem Benutzernamen entsprechen.';
+    }
+
+    try {
+        $pdo->prepare('UPDATE `users` SET `password_hash` = ? WHERE `id` = ?')
+            ->execute([password_hash($new, PASSWORD_BCRYPT, ['cost' => CG_BCRYPT_COST]), $userId]);
+    } catch (Throwable) {
+        return 'Datenbankfehler. Bitte später erneut versuchen.';
+    }
+
+    session_regenerate_id(true);
+    cg_log(LOG_PASSWORD_CHANGED, [], $userId);
+
+    return true;
 }
 
 /**
@@ -433,21 +622,22 @@ function auth_logout(string $redirectTo = ''): void
 
     if (ini_get('session.use_cookies')) {
         $params = session_get_cookie_params();
-        setcookie(
-            session_name(),
-            '',
-            time() - 42000,
-            $params['path'],
-            $params['domain'],
-            $params['secure'],
-            $params['httponly']
-        );
+        setcookie(session_name(), '', [
+            'expires'  => time() - 42000,
+            'path'     => $params['path'],
+            'domain'   => $params['domain'],
+            'secure'   => $params['secure'],
+            'httponly' => $params['httponly'],
+            'samesite' => 'Strict',
+        ]);
     }
 
-    session_destroy();
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_destroy();
+    }
 
     if ($redirectTo !== '') {
-        header('Location: ' . $redirectTo);
+        header('Location: ' . cg_safe_redirect($redirectTo));
         exit;
     }
 }

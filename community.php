@@ -1,5 +1,6 @@
 <?php
 $pageTitle       = 'Community';
+$noindex         = true;
 $pageDescription = 'Exklusiver Mitgliederbereich – Discord, Ankündigungen und Community-Updates.';
 require_once __DIR__ . '/includes/head.php';
 
@@ -27,7 +28,7 @@ if ($pdo !== null) {
 ?>
 <?php require_once __DIR__ . '/includes/navbar.php'; ?>
 
-<main>
+<main id="main">
 
   <!-- Page Hero -->
   <section class="cg-page-hero">
@@ -100,13 +101,13 @@ if ($pdo !== null) {
                   <i class="fas fa-bullhorn"></i>
                 </span>
                 <div class="flex-grow-1 min-w-0">
-                  <h5 class="mb-1" style="font-size:1.05rem;"><?= htmlspecialchars($ann['title']) ?></h5>
+                  <h5 class="mb-1" style="font-size:1.05rem;"><?= e($ann['title']) ?></h5>
                   <div class="d-flex gap-3 mb-3" style="font-size:.78rem;color:var(--cg-muted);">
-                    <span><i class="fas fa-user me-1"></i><?= htmlspecialchars($ann['author_name']) ?></span>
-                    <span><i class="fas fa-calendar me-1"></i><?= date('d.m.Y \u2013 H:i', strtotime($ann['created_at'])) ?> Uhr</span>
+                    <span><i class="fas fa-user me-1"></i><?= e($ann['author_name']) ?></span>
+                    <span><i class="fas fa-calendar me-1"></i><?= e(date('d.m.Y', strtotime($ann['created_at'])) . ' – ' . date('H:i', strtotime($ann['created_at']))) ?> Uhr</span>
                   </div>
                   <div class="cg-announcement-body">
-                    <?= nl2br(htmlspecialchars($ann['body'])) ?>
+                    <?= nl2br(e($ann['body'])) ?>
                   </div>
                 </div>
               </div>

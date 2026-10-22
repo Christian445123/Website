@@ -26,27 +26,11 @@ const RL_CLEANUP_PROB = 5;                 // % Wahrscheinlichkeit für GC
 //  Helpers 
 
 /**
- * Returns the visitor's real IP, honouring common proxy headers
- * but falling back to REMOTE_ADDR.
+ * Returns the visitor's real IP (Proxy-Header nur von vertrauenswürdigen Proxies).
  */
 function rl_get_ip(): string
 {
-    $candidates = [
-        'HTTP_CF_CONNECTING_IP',   // Cloudflare
-        'HTTP_X_REAL_IP',
-        'HTTP_X_FORWARDED_FOR',
-        'REMOTE_ADDR',
-    ];
-    foreach ($candidates as $key) {
-        if (!empty($_SERVER[$key])) {
-            // X-Forwarded-For may be comma-separated; take first
-            $ip = trim(explode(',', $_SERVER[$key])[0]);
-            if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                return $ip;
-            }
-        }
-    }
-    return '0.0.0.0';
+    return cg_client_ip(); // spoof-sicher, siehe security.php
 }
 
 /**
@@ -199,9 +183,8 @@ function rl_send_429(string $ip): void
   <title>429  Zu viele Anfragen | Chris_Gaming445</title>
   <link rel="shortcut icon" href="/assets/images/cg-logo-neu.png-496x496.png" type="image/x-icon">
   <link rel="stylesheet" href="/assets/bootstrap/css/bootstrap.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Tilt+Warp&family=Golos+Text:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/fonts/fonts.css">
+  <link rel="stylesheet" href="/assets/fontawesome/css/all.min.css">
   <style>
     :root { --cg-bg:#0d0d0f; --cg-red:#e03131; --cg-surface:#161619; }
     body { background:var(--cg-bg); color:#e8e8ed; font-family:'Golos Text',sans-serif;

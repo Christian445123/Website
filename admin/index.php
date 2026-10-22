@@ -1,4 +1,5 @@
 <?php
+$noindex = true;
 $pageTitle = 'Admin &ndash; Übersicht';
 require_once __DIR__ . '/../includes/head.php';
 auth_require_role('admin');
@@ -18,7 +19,6 @@ if ($pdo !== null) {
         $stats['announcements'] = (int) $pdo->query('SELECT COUNT(*) FROM `announcements` WHERE `is_active`=1')->fetchColumn();
         // Heute-Stats aus Activity Log
         $today = date('Y-m-d');
-        $stats['logins_today']  = (int) $pdo->prepare("SELECT COUNT(*) FROM `activity_log` WHERE `event`='login.success' AND DATE(`created_at`)=?")->execute([$today]) ? $pdo->prepare("SELECT COUNT(*) FROM `activity_log` WHERE `event`='login.success' AND DATE(`created_at`)=?")->execute([$today]) || 0 : 0;
         $q = $pdo->prepare("SELECT COUNT(*) FROM `activity_log` WHERE `event`=? AND DATE(`created_at`)=?");
         $q->execute(['login.success',  $today]); $stats['logins_today']   = (int) $q->fetchColumn();
         $q->execute(['login.failed',   $today]); $stats['failed_today']   = (int) $q->fetchColumn();
@@ -35,7 +35,7 @@ if ($pdo !== null) {
 ?>
 <?php require_once __DIR__ . '/../includes/navbar.php'; ?>
 
-<main>
+<main id="main">
   <section class="cg-page-hero">
     <div class="container">
       <span class="cg-section-label" style="color:var(--cg-red);">Administrator</span>
@@ -126,20 +126,20 @@ if ($pdo !== null) {
           ?>
           <tr>
             <td style="padding:.55rem 1rem;color:#8b8b9a;white-space:nowrap">
-              <?= htmlspecialchars(date('d.m. H:i:s', strtotime($log['created_at']))) ?>
+              <?= e(date('d.m. H:i:s', strtotime($log['created_at']))) ?>
             </td>
             <td style="padding:.55rem 1rem">
               <span class="badge bg-<?= $badgeClass ?>" style="font-size:.73rem">
-                <?= htmlspecialchars($log['event']) ?>
+                <?= e($log['event']) ?>
               </span>
             </td>
             <td style="padding:.55rem 1rem">
               <code style="color:#a9b1d6;background:rgba(255,255,255,.05);padding:.1rem .3rem;border-radius:.2rem;font-size:.78rem">
-                <?= htmlspecialchars($log['ip']) ?>
+                <?= e($log['ip']) ?>
               </code>
             </td>
             <td style="padding:.55rem 1rem;color:#e8e8ed">
-              <?= $log['username'] ? htmlspecialchars($log['username']) : '<span style="color:#555">—</span>' ?>
+              <?= $log['username'] ? e($log['username']) : '<span style="color:#555">—</span>' ?>
             </td>
           </tr>
           <?php endforeach; ?>

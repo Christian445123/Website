@@ -5,7 +5,7 @@ require_once __DIR__ . '/includes/head.php';
 ?>
 <?php require_once __DIR__ . '/includes/navbar.php'; ?>
 
-<main>
+<main id="main">
 
   <section class="cg-page-hero">
     <div class="container">
@@ -62,7 +62,7 @@ require_once __DIR__ . '/includes/head.php';
             <p>
               Diese Website setzt technisch notwendige Session-Cookies ein, die nach dem Schließen
               des Browsers gelöscht werden. Darüber hinaus wird Google Analytics zur anonymen
-              Analyse des Nutzungsverhaltens eingesetzt. Weitere Details finden Sie in der
+              Analyse des Nutzungsverhaltens nur nach Ihrer Einwilligung (Cookie-Hinweis) eingesetzt. Weitere Details finden Sie in der
               <a href="datenschutz.php">Datenschutzerklärung</a>.
             </p>
 

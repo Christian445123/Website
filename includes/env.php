@@ -68,9 +68,17 @@ function decryptEnvValue(string $encoded): string
         return;
     }
 
-    $envFile = dirname(__DIR__) . '/.env';
+    // Suchreihenfolge: CG_ENV_FILE → .env EINE EBENE ÜBER dem Webroot (empfohlen, nicht per
+    // HTTP erreichbar) → .env im Webroot (Fallback; muss per Webserver-Regel gesperrt sein)
+    $envFile = '';
+    foreach ([getenv('CG_ENV_FILE') ?: '', dirname(__DIR__, 2) . '/.env', dirname(__DIR__) . '/.env'] as $cand) {
+        if ($cand !== '' && is_file($cand) && is_readable($cand)) {
+            $envFile = $cand;
+            break;
+        }
+    }
 
-    if (!is_file($envFile)) {
+    if ($envFile === '') {
         // .env fehlt – kein fataler Fehler, weiter mit Defaults
         return;
     }

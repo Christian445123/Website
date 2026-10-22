@@ -6,7 +6,7 @@ require_once __DIR__ . '/includes/head.php';
 
 <?php require_once __DIR__ . '/includes/navbar.php'; ?>
 
-<main>
+<main id="main">
 
   <!-- Page Hero -->
   <section class="cg-page-hero">

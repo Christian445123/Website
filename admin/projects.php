@@ -1,4 +1,5 @@
 <?php
+$noindex = true;
 $pageTitle = 'Admin &ndash; Projekte';
 require_once __DIR__ . '/../includes/head.php';
 auth_require_role('admin');
@@ -10,6 +11,7 @@ $editItem = null;
 
 // ── POST ───────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo !== null) {
+    csrf_require();
     $action = (string) ($_POST['action'] ?? '');
 
     try {
@@ -29,8 +31,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo !== null) {
             $tagsArr = array_filter(array_map('trim', explode(',', $tagsRaw)));
             $tagsJson = count($tagsArr) > 0 ? json_encode(array_values($tagsArr), JSON_UNESCAPED_UNICODE) : null;
 
+            // Eingaben bereinigen – Werte landen später in style=""/class=""/href=""
+            $iconClass = cg_clean_icon_class($iconClass);
+            $iconColor = cg_clean_css_color($iconColor, '#e8351f');
+            $iconBg    = cg_clean_css_color($iconBg, 'rgba(232,53,31,.15)');
+            if (!in_array($linkStyle, ['outline', 'primary', 'discord', 'disabled'], true)) {
+                $linkStyle = 'outline';
+            }
+            $sortOrder = max(0, min(999, $sortOrder));
+
             if ($title === '' || $desc === '') {
                 $message = 'Titel und Beschreibung sind Pflichtfelder.'; $msgType = 'danger';
+            } elseif (mb_strlen($title) > 128 || mb_strlen($desc) > 5000 || mb_strlen($linkLabel) > 64) {
+                $message = 'Titel (max. 128), Beschreibung (max. 5000) oder Link-Text (max. 64) ist zu lang.'; $msgType = 'danger';
+            } elseif ($linkUrl !== '' && (strlen($linkUrl) > 512 || !cg_is_http_url($linkUrl))) {
+                $message = 'Link-URL muss mit http:// oder https:// beginnen.'; $msgType = 'danger';
             } elseif ($action === 'create') {
                 $pdo->prepare(
                     'INSERT INTO `projects` (`title`,`description`,`icon_class`,`icon_color`,`icon_bg`,
@@ -66,7 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo !== null) {
             $message = 'Projekt gelöscht.';
         }
     } catch (Throwable $e) {
-        $message = 'Fehler: ' . htmlspecialchars($e->getMessage()); $msgType = 'danger';
+        error_log('[CG] admin/projects: ' . $e->getMessage());
+        $message = 'Aktion fehlgeschlagen. Details stehen im Server-Log.'; $msgType = 'danger';
     }
 }
 
@@ -108,7 +124,7 @@ $iconPresets = [
 ?>
 <?php require_once __DIR__ . '/../includes/navbar.php'; ?>
 
-<main>
+<main id="main">
   <section class="cg-page-hero">
     <div class="container">
       <span class="cg-section-label" style="color:var(--cg-red);">Administrator</span>
@@ -135,6 +151,7 @@ $iconPresets = [
             </h5>
 
             <form method="POST">
+              <?= csrf_field() ?>
               <input type="hidden" name="action" value="<?= $editItem ? 'update' : 'create' ?>">
               <?php if ($editItem): ?>
                 <input type="hidden" name="id" value="<?= (int)$editItem['id'] ?>">
@@ -143,7 +160,7 @@ $iconPresets = [
               <div class="pg-group">
                 <label class="pg-label">Titel *</label>
                 <input type="text" name="title" class="pg-input"
-                       value="<?= htmlspecialchars($editItem['title'] ?? '') ?>"
+                       value="<?= e($editItem['title'] ?? '') ?>"
                        placeholder="z.B. Twitch Streaming" required>
               </div>
 
@@ -151,13 +168,13 @@ $iconPresets = [
                 <label class="pg-label">Beschreibung *</label>
                 <textarea name="description" class="pg-input" rows="4"
                           placeholder="Kurze Projektbeschreibung..."
-                          required><?= htmlspecialchars($editItem['description'] ?? '') ?></textarea>
+                          required><?= e($editItem['description'] ?? '') ?></textarea>
               </div>
 
               <div class="pg-group">
                 <label class="pg-label">Tags <small style="color:var(--cg-muted)">(kommagetrennt)</small></label>
                 <input type="text" name="tags" class="pg-input"
-                       value="<?= htmlspecialchars($editTagsStr) ?>"
+                       value="<?= e($editTagsStr) ?>"
                        placeholder="z.B. PHP, Bootstrap, MySQL">
               </div>
 
@@ -167,7 +184,7 @@ $iconPresets = [
                 <div class="d-flex flex-wrap gap-2 mb-2">
                   <?php foreach ($iconPresets as $p): ?>
                   <button type="button" class="pg-preset-btn"
-                          onclick="pgApplyPreset('<?= htmlspecialchars($p['class'],ENT_QUOTES) ?>','<?= $p['color'] ?>','<?= htmlspecialchars($p['bg'],ENT_QUOTES) ?>')"
+                          data-preset-class="<?= e($p['class']) ?>" data-preset-color="<?= e($p['color']) ?>" data-preset-bg="<?= e($p['bg']) ?>"
                           title="<?= $p['label'] ?>">
                     <span style="width:28px;height:28px;border-radius:.35rem;display:inline-flex;align-items:center;justify-content:center;background:<?= $p['bg'] ?>;color:<?= $p['color'] ?>;font-size:.85rem;">
                       <i class="<?= $p['class'] ?>"></i>
@@ -182,17 +199,17 @@ $iconPresets = [
                 <div class="col-4">
                   <label class="pg-label">Icon-Klasse</label>
                   <input type="text" id="pg_icon_class" name="icon_class" class="pg-input"
-                         value="<?= htmlspecialchars($editItem['icon_class'] ?? 'fas fa-star') ?>">
+                         value="<?= e($editItem['icon_class'] ?? 'fas fa-star') ?>">
                 </div>
                 <div class="col-4">
                   <label class="pg-label">Icon-Farbe</label>
                   <input type="text" id="pg_icon_color" name="icon_color" class="pg-input"
-                         value="<?= htmlspecialchars($editItem['icon_color'] ?? '#e8351f') ?>">
+                         value="<?= e($editItem['icon_color'] ?? '#e8351f') ?>">
                 </div>
                 <div class="col-4">
                   <label class="pg-label">Icon-BG</label>
                   <input type="text" id="pg_icon_bg" name="icon_bg" class="pg-input"
-                         value="<?= htmlspecialchars($editItem['icon_bg'] ?? 'rgba(232,53,31,.15)') ?>">
+                         value="<?= e($editItem['icon_bg'] ?? 'rgba(232,53,31,.15)') ?>">
                 </div>
               </div>
 
@@ -200,13 +217,13 @@ $iconPresets = [
                 <div class="col-7">
                   <label class="pg-label">Link-URL</label>
                   <input type="url" name="link_url" class="pg-input"
-                         value="<?= htmlspecialchars($editItem['link_url'] ?? '') ?>"
+                         value="<?= e($editItem['link_url'] ?? '') ?>"
                          placeholder="https://...">
                 </div>
                 <div class="col-5">
                   <label class="pg-label">Link-Text</label>
                   <input type="text" name="link_label" class="pg-input"
-                         value="<?= htmlspecialchars($editItem['link_label'] ?? '') ?>"
+                         value="<?= e($editItem['link_label'] ?? '') ?>"
                          placeholder="Zum Projekt">
                 </div>
               </div>
@@ -260,12 +277,12 @@ $iconPresets = [
               ?>
               <div class="cg-card" style="padding:1rem 1.1rem;<?= !(bool)$proj['is_active'] ? 'opacity:.5;' : '' ?>">
                 <div class="d-flex align-items-start gap-3">
-                  <span class="cg-feature-icon" style="min-width:40px;height:40px;font-size:.9rem;flex-shrink:0;background:<?= htmlspecialchars($proj['icon_bg']) ?>;color:<?= htmlspecialchars($proj['icon_color']) ?>;">
-                    <i class="<?= htmlspecialchars($proj['icon_class']) ?>"></i>
+                  <span class="cg-feature-icon" style="min-width:40px;height:40px;font-size:.9rem;flex-shrink:0;background:<?= e(cg_clean_css_color((string)$proj['icon_bg'], 'rgba(232,53,31,.15)')) ?>;color:<?= e(cg_clean_css_color((string)$proj['icon_color'], '#e8351f')) ?>;">
+                    <i class="<?= e(cg_clean_icon_class((string)$proj['icon_class'])) ?>"></i>
                   </span>
                   <div class="flex-grow-1 min-w-0">
                     <div class="d-flex justify-content-between gap-2 flex-wrap">
-                      <div style="font-weight:600;"><?= htmlspecialchars($proj['title']) ?></div>
+                      <div style="font-weight:600;"><?= e($proj['title']) ?></div>
                       <div style="font-size:.75rem;color:var(--cg-muted);">
                         #<?= (int)$proj['id'] ?> &middot; Reihenfolge: <?= (int)$proj['sort_order'] ?>
                         &middot; <?= (bool)$proj['is_active'] ? '<span style="color:#37b24d">Sichtbar</span>' : '<span style="color:#e03131">Versteckt</span>' ?>
@@ -274,7 +291,7 @@ $iconPresets = [
                     <?php if (is_array($tags) && count($tags)): ?>
                     <div class="d-flex flex-wrap gap-1 mt-1">
                       <?php foreach ($tags as $tag): ?>
-                        <span style="background:rgba(255,255,255,.08);color:var(--cg-muted);padding:.1rem .45rem;border-radius:2rem;font-size:.7rem;"><?= htmlspecialchars($tag) ?></span>
+                        <span style="background:rgba(255,255,255,.08);color:var(--cg-muted);padding:.1rem .45rem;border-radius:2rem;font-size:.7rem;"><?= e($tag) ?></span>
                       <?php endforeach; ?>
                     </div>
                     <?php endif; ?>
@@ -284,6 +301,7 @@ $iconPresets = [
                       <i class="fas fa-pen" style="color:#339af0;"></i>
                     </a>
                     <form method="POST" class="d-inline">
+                      <?= csrf_field() ?>
                       <input type="hidden" name="action" value="toggle">
                       <input type="hidden" name="id"     value="<?= (int)$proj['id'] ?>">
                       <button class="admin-btn" title="<?= (bool)$proj['is_active'] ? 'Verstecken' : 'Anzeigen' ?>">
@@ -291,10 +309,11 @@ $iconPresets = [
                       </button>
                     </form>
                     <form method="POST" class="d-inline">
+                      <?= csrf_field() ?>
                       <input type="hidden" name="action" value="delete">
                       <input type="hidden" name="id"     value="<?= (int)$proj['id'] ?>">
                       <button class="admin-btn" title="Löschen"
-                              onclick="return confirm('Projekt &quot;<?= htmlspecialchars($proj['title'], ENT_QUOTES) ?>&quot; wirklich löschen?')">
+                              data-confirm="Projekt &quot;<?= e($proj['title']) ?>&quot; wirklich löschen?">
                         <i class="fas fa-trash" style="color:#e03131;"></i>
                       </button>
                     </form>
@@ -327,25 +346,8 @@ textarea.pg-input { resize:vertical; }
   display:inline-flex;align-items:center;gap:.4rem;transition:border-color .2s;
 }
 .pg-preset-btn:hover { border-color:var(--cg-red); }
-.cg-login-btn {
-  width:100%;padding:.7rem;background:var(--cg-red);color:#fff;border:none;
-  border-radius:.5rem;font-weight:700;font-size:1rem;cursor:pointer;transition:background .2s;
-}
-.cg-login-btn:hover { background:#c92a2a; }
-.admin-btn {
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
-  border-radius:.4rem;padding:.3rem .5rem;font-size:.8rem;cursor:pointer;
-  text-decoration:none;display:inline-flex;align-items:center;transition:background .2s;
-}
-.admin-btn:hover { background:rgba(255,255,255,.1); }
 </style>
 
-<script>
-function pgApplyPreset(iconClass, iconColor, iconBg) {
-  document.getElementById('pg_icon_class').value = iconClass;
-  document.getElementById('pg_icon_color').value = iconColor;
-  document.getElementById('pg_icon_bg').value    = iconBg;
-}
-</script>
+
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

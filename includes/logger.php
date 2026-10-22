@@ -30,6 +30,8 @@ const LOG_LOGIN_FAILED         = 'login.failed';
 const LOG_LOGIN_UNVERIFIED     = 'login.unverified';
 const LOG_LOGIN_INACTIVE       = 'login.inactive';
 const LOG_LOGOUT               = 'logout';
+const LOG_LOGIN_THROTTLED      = 'login.throttled';
+const LOG_PASSWORD_CHANGED     = 'account.password_changed';
 
 // ── Registrierung ───────────────────────────────────────────────
 const LOG_REGISTER_SUCCESS     = 'register.success';
@@ -96,6 +98,8 @@ function cg_log_meta(string $event): array
             => ['level' => 'critical', 'color' => 0xE03131, 'emoji' => '🗑️', 'label' => 'Benutzer gelöscht'],
         $event === LOG_LOGIN_INACTIVE
             => ['level' => 'critical', 'color' => 0xE03131, 'emoji' => '🔴',  'label' => 'Login: Account gesperrt'],
+        $event === LOG_LOGIN_THROTTLED
+            => ['level' => 'critical', 'color' => 0xE03131, 'emoji' => '🛑',  'label' => 'Login gedrosselt (Brute-Force-Verdacht)'],
 
         // ── Warnung (gelb) ─────────────────────────────────────
         $event === LOG_LOGIN_FAILED
@@ -118,6 +122,8 @@ function cg_log_meta(string $event): array
             => ['level' => 'info',     'color' => 0x2F9E44, 'emoji' => '✅', 'label' => 'Login erfolgreich'],
         $event === LOG_LOGOUT
             => ['level' => 'info',     'color' => 0x2F9E44, 'emoji' => '👋', 'label' => 'Logout'],
+        $event === LOG_PASSWORD_CHANGED
+            => ['level' => 'info',     'color' => 0x5865F2, 'emoji' => '🔑', 'label' => 'Passwort geändert'],
         $event === LOG_VERIFY_SUCCESS
             => ['level' => 'info',     'color' => 0x2F9E44, 'emoji' => '✉️', 'label' => 'E-Mail erfolgreich verifiziert'],
         $event === LOG_VERIFY_ALREADY
@@ -273,13 +279,14 @@ function cg_log_discord(string $event, array $context, ?int $userId, string $ip)
         }
         $fields[] = [
             'name'   => ucfirst(str_replace('_', ' ', (string) $key)),
-            'value'  => '`' . mb_substr((string) $value, 0, 1000) . '`',
+            'value'  => '`' . str_replace('`', "'", mb_substr((string) $value, 0, 1000)) . '`',
             'inline' => true,
         ];
     }
 
     $payload = [
         'username'   => 'CG Security Bot',
+        'allowed_mentions' => ['parse' => []], // nie @everyone/@here/Rollen pingen
         'avatar_url' => 'https://chrisgaming.at/assets/images/cg-logo-neu.png-496x496.png',
         'embeds'     => [[
             'title'     => $meta['emoji'] . '  ' . $meta['label'],
@@ -322,21 +329,7 @@ function cg_log_discord(string $event, array $context, ?int $userId, string $ip)
  */
 function cg_log_get_ip(): string
 {
-    $candidates = [
-        'HTTP_CF_CONNECTING_IP',   // Cloudflare
-        'HTTP_X_REAL_IP',
-        'HTTP_X_FORWARDED_FOR',
-        'REMOTE_ADDR',
-    ];
-    foreach ($candidates as $key) {
-        if (!empty($_SERVER[$key])) {
-            $ip = trim(explode(',', $_SERVER[$key])[0]);
-            if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                return $ip;
-            }
-        }
-    }
-    return '0.0.0.0';
+    return cg_client_ip(); // siehe security.php – Proxy-Header nur von vertrauenswürdigen Proxies
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -435,10 +428,15 @@ function cg_php_exception_handler(Throwable $e): void
     if (!headers_sent()) {
         http_response_code(500);
     }
-    if ((string) env('APP_DEBUG', '') === 'true') {
+    // Details nur im lokalen Debug-Betrieb (APP_DEBUG=true UND Zugriff von localhost) – nie öffentlich
+    if ((string) env('APP_DEBUG', '') === 'true' && in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true)) {
         echo '<pre style="background:#1a1a1a;color:#ff6b6b;padding:2rem;font-size:.85rem">';
         echo htmlspecialchars((string) $e);
         echo '</pre>';
+    } else {
+        echo '<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Fehler</title></head>'
+           . '<body style="font-family:sans-serif;text-align:center;padding:4rem;background:#090a0c;color:#eaeaef">'
+           . '<h1>Ups &ndash; da ist etwas schiefgelaufen</h1><p>Der Fehler wurde protokolliert. Bitte versuche es später erneut.</p></body></html>';
     }
 }
 

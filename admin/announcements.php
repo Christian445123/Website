@@ -1,4 +1,5 @@
 <?php
+$noindex = true;
 $pageTitle = 'Admin &ndash; Ankündigungen';
 require_once __DIR__ . '/../includes/head.php';
 auth_require_role('admin');
@@ -10,6 +11,7 @@ $editItem = null;
 
 // ── POST actions ─────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo !== null) {
+    csrf_require();
     $action = (string) ($_POST['action'] ?? '');
 
     try {
@@ -18,6 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo !== null) {
             $body  = trim((string) ($_POST['body']  ?? ''));
             if ($title === '' || $body === '') {
                 $message = 'Titel und Text dürfen nicht leer sein.';
+                $msgType = 'danger';
+            } elseif (mb_strlen($title) > 128 || mb_strlen($body) > 10000) {
+                $message = 'Titel (max. 128) oder Text (max. 10000 Zeichen) ist zu lang.';
                 $msgType = 'danger';
             } elseif ($action === 'create') {
                 $pdo->prepare(
@@ -48,7 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo !== null) {
             $message = 'Ankündigung gelöscht.';
         }
     } catch (Throwable $e) {
-        $message = 'Fehler: ' . htmlspecialchars($e->getMessage());
+        error_log('[CG] admin/announcements: ' . $e->getMessage());
+        $message = 'Aktion fehlgeschlagen. Details stehen im Server-Log.';
         $msgType = 'danger';
     }
 }
@@ -78,7 +84,7 @@ if ($pdo !== null) {
 ?>
 <?php require_once __DIR__ . '/../includes/navbar.php'; ?>
 
-<main>
+<main id="main">
   <section class="cg-page-hero">
     <div class="container">
       <span class="cg-section-label" style="color:var(--cg-red);">Administrator</span>
@@ -105,6 +111,7 @@ if ($pdo !== null) {
             </h5>
 
             <form method="POST">
+              <?= csrf_field() ?>
               <input type="hidden" name="action" value="<?= $editItem ? 'update' : 'create' ?>">
               <?php if ($editItem): ?>
                 <input type="hidden" name="id" value="<?= (int)$editItem['id'] ?>">
@@ -115,7 +122,7 @@ if ($pdo !== null) {
                 <div class="cg-input-wrap">
                   <i class="fas fa-heading cg-input-icon"></i>
                   <input type="text" name="title" class="cg-form-input"
-                         value="<?= htmlspecialchars($editItem['title'] ?? '') ?>"
+                         value="<?= e($editItem['title'] ?? '') ?>"
                          placeholder="Ankündigungs-Titel" required>
                 </div>
               </div>
@@ -125,7 +132,7 @@ if ($pdo !== null) {
                 <textarea name="body" class="cg-form-input" rows="8"
                           style="padding-left:.9rem;resize:vertical;"
                           placeholder="Hier den Text der Ankündigung eingeben..."
-                          required><?= htmlspecialchars($editItem['body'] ?? '') ?></textarea>
+                          required><?= e($editItem['body'] ?? '') ?></textarea>
               </div>
 
               <div class="d-flex gap-2">
@@ -160,13 +167,13 @@ if ($pdo !== null) {
               <div class="cg-card" style="padding:1rem 1.1rem;<?= !(bool)$item['is_active'] ? 'opacity:.5;' : '' ?>">
                 <div class="d-flex align-items-start justify-content-between gap-2">
                   <div class="flex-grow-1 min-w-0">
-                    <div style="font-weight:600;margin-bottom:.25rem;"><?= htmlspecialchars($item['title']) ?></div>
+                    <div style="font-weight:600;margin-bottom:.25rem;"><?= e($item['title']) ?></div>
                     <div style="font-size:.78rem;color:var(--cg-muted);">
-                      <?= htmlspecialchars($item['author_name']) ?> &middot; <?= date('d.m.Y H:i', strtotime($item['created_at'])) ?>
+                      <?= e($item['author_name']) ?> &middot; <?= date('d.m.Y H:i', strtotime($item['created_at'])) ?>
                       &middot; <?= (bool)$item['is_active'] ? '<span style="color:#37b24d">Aktiv</span>' : '<span style="color:#e03131">Versteckt</span>' ?>
                     </div>
                     <div style="font-size:.85rem;color:var(--cg-text-2);margin-top:.4rem;overflow:hidden;max-height:3.2em;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;">
-                      <?= htmlspecialchars(mb_strimwidth($item['body'], 0, 120, '&hellip;')) ?>
+                      <?= e(mb_strimwidth($item['body'], 0, 120, '…')) ?>
                     </div>
                   </div>
                   <div class="d-flex gap-1 flex-shrink-0">
@@ -174,6 +181,7 @@ if ($pdo !== null) {
                       <i class="fas fa-pen" style="color:#339af0;"></i>
                     </a>
                     <form method="POST" class="d-inline">
+                      <?= csrf_field() ?>
                       <input type="hidden" name="action" value="toggle">
                       <input type="hidden" name="id"     value="<?= (int)$item['id'] ?>">
                       <button class="admin-btn" title="<?= (bool)$item['is_active'] ? 'Verstecken' : 'Anzeigen' ?>">
@@ -181,10 +189,11 @@ if ($pdo !== null) {
                       </button>
                     </form>
                     <form method="POST" class="d-inline">
+                      <?= csrf_field() ?>
                       <input type="hidden" name="action" value="delete">
                       <input type="hidden" name="id"     value="<?= (int)$item['id'] ?>">
                       <button class="admin-btn" title="Löschen"
-                              onclick="return confirm('Ankündigung &quot;<?= htmlspecialchars($item['title'], ENT_QUOTES) ?>&quot; wirklich löschen?')">
+                              data-confirm="Ankündigung &quot;<?= e($item['title']) ?>&quot; wirklich löschen?">
                         <i class="fas fa-trash" style="color:#e03131;"></i>
                       </button>
                     </form>
@@ -201,36 +210,4 @@ if ($pdo !== null) {
   </section>
 </main>
 
-<?= admin_ann_styles() ?>
-
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
-
-<?php
-function admin_ann_styles(): string { return <<<'CSS'
-<style>
-.cg-form-group  { margin-bottom: 1.1rem; }
-.cg-form-label  { display:block;color:#c0c0cc;font-size:.85rem;font-weight:600;margin-bottom:.4rem; }
-.cg-input-wrap  { position:relative; }
-.cg-input-icon  { position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:#5a5a6e;font-size:.9rem;pointer-events:none; }
-.cg-form-input  {
-  width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
-  border-radius:.5rem;padding:.65rem .9rem .65rem 2.4rem;color:#e8e8ed;
-  font-size:.95rem;transition:border-color .2s;outline:none;
-}
-textarea.cg-form-input { padding-left:.9rem; }
-.cg-form-input:focus { border-color:var(--cg-red);background:rgba(255,255,255,.06); }
-.cg-login-btn {
-  width:100%;padding:.7rem;background:var(--cg-red);color:#fff;border:none;
-  border-radius:.5rem;font-weight:700;font-size:1rem;cursor:pointer;margin-top:.5rem;transition:background .2s;
-}
-.cg-login-btn:hover { background:#c92a2a; }
-.admin-btn {
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
-  border-radius:.4rem;padding:.3rem .5rem;font-size:.8rem;cursor:pointer;
-  text-decoration:none;display:inline-flex;align-items:center;
-  transition:background .2s;
-}
-.admin-btn:hover { background:rgba(255,255,255,.1); }
-</style>
-CSS; }
-?>

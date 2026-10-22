@@ -10,6 +10,7 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/security.php'; // Security-Header + Helper (vor jeder Ausgabe)
 require_once __DIR__ . '/env.php';
 
 /**
@@ -50,7 +51,7 @@ function db(): ?PDO
 
     try {
         $pdo = new PDO($dsn, $user, $pass, $options);
-        db_migrate($pdo); // Tabellen automatisch anlegen
+        db_migrate_once($pdo); // Tabellen automatisch anlegen (nur wenn Schema-Version neu)
     } catch (PDOException $e) {
         error_log('[CG] DB connection failed: ' . $e->getMessage());
         $pdo = null;
@@ -59,11 +60,29 @@ function db(): ?PDO
     return $pdo;
 }
 
+/** Schema-Version: bei Änderungen an db_migrate() erhöhen. */
+const CG_SCHEMA_VERSION = 4;
+
+/**
+ * Führt db_migrate() nur aus, wenn tmp/.schema_v<N> fehlt – spart ~10 DDL-Queries pro Request.
+ * Ist tmp/ nicht beschreibbar, läuft die (idempotente) Migration wie früher bei jedem Request.
+ */
+function db_migrate_once(PDO $pdo): void
+{
+    $marker = dirname(__DIR__) . '/tmp/.schema_v' . CG_SCHEMA_VERSION;
+    if (is_file($marker)) {
+        return;
+    }
+    if (db_migrate($pdo)) {
+        @file_put_contents($marker, date('c'));
+    }
+}
+
 /**
  * Legt alle benötigten Tabellen an und führt Spalten-Migrationen durch.
  * Wird automatisch nach dem ersten erfolgreichen Verbindungsaufbau aufgerufen.
  */
-function db_migrate(PDO $pdo): void
+function db_migrate(PDO $pdo): bool
 {
     try {
 
@@ -157,6 +176,20 @@ function db_migrate(PDO $pdo): void
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
 
+        // ── auth_attempts (Login-/Registrierungs-Throttling) ────────
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `auth_attempts` (
+                `id`           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `kind`         VARCHAR(16)     NOT NULL COMMENT 'login | register',
+                `ip_hash`      CHAR(64)        NOT NULL,
+                `subject_hash` CHAR(64)        NOT NULL DEFAULT '' COMMENT 'SHA-256 von Benutzername/E-Mail',
+                `attempted_at` INT UNSIGNED    NOT NULL,
+                PRIMARY KEY (`id`),
+                INDEX `idx_kind_ip`      (`kind`, `ip_hash`, `attempted_at`),
+                INDEX `idx_kind_subject` (`kind`, `subject_hash`, `attempted_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+
         // ── Spalten-Migrationen (idempotent via INFORMATION_SCHEMA) ───
         $dbName = (string) $pdo->query('SELECT DATABASE()')->fetchColumn();
         $getColumns = static function (string $table) use ($pdo, $dbName): array {
@@ -190,5 +223,8 @@ function db_migrate(PDO $pdo): void
     } catch (Throwable $e) {
         error_log('[CG] DB migrate error: ' . $e->getMessage());
         // Nicht fatal – Applikation läuft weiter
+        return false;
     }
+
+    return true;
 }

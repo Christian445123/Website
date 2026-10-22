@@ -6,7 +6,7 @@ require_once __DIR__ . '/includes/head.php';
 
 <?php require_once __DIR__ . '/includes/navbar.php'; ?>
 
-<main>
+<main id="main">
 
   <section class="cg-page-hero">
     <div class="container">
@@ -38,9 +38,13 @@ require_once __DIR__ . '/includes/head.php';
 
             <h2>3. Cookies &amp; Session</h2>
             <p>
-              Diese Website setzt ausschließlich technisch notwendige Session-Cookies ein, die
-              nach dem Schließen des Browsers automatisch gelöscht werden. Sie dienen dem Betrieb
-              des Login-Systems und erfordern keine Einwilligung (Art. 6 Abs. 1 lit. b DSGVO).
+              Ohne Ihre Einwilligung setzt diese Website ausschließlich technisch notwendige
+              Session-Cookies ein, die nach dem Schließen des Browsers automatisch gelöscht werden.
+              Sie dienen dem Betrieb des Login-Systems und erfordern keine Einwilligung
+              (Art. 6 Abs. 1 lit. b DSGVO). Zusätzlich speichert Ihr Browser Ihre Cookie-Auswahl
+              lokal (localStorage), damit der Hinweis nicht bei jedem Besuch erscheint.<br><br>
+              Schriftarten und Icons werden von unserem eigenen Server ausgeliefert; dabei wird
+              keine Verbindung zu Google- oder CDN-Servern aufgebaut.
             </p>
 
             <h2>4. Registrierung &amp; Login</h2>
@@ -59,9 +63,11 @@ require_once __DIR__ . '/includes/head.php';
               Cookies ein, die eine Analyse der Benutzung der Website ermöglichen. Die dadurch
               erzeugten Informationen über Ihre Nutzung der Website werden üblicherweise an einen
               Server von Google in den USA übertragen und dort gespeichert.<br><br>
-              Grundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Analyse
-              des Nutzungsverhaltens zur Optimierung des Angebots).<br><br>
-              Sie können die Erfassung durch Google Analytics verhindern, indem Sie ein Browser-Add-on
+              Google Analytics wird <strong>ausschließlich nach Ihrer ausdrücklichen Einwilligung</strong>
+              (Cookie-Hinweis) geladen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO. Die
+              IP-Adresse wird anonymisiert. Ihre Einwilligung können Sie jederzeit über den Link
+              „Cookie-Einstellungen“ im Footer widerrufen bzw. ändern.<br><br>
+              Zusätzlich können Sie die Erfassung durch Google Analytics verhindern, indem Sie ein Browser-Add-on
               installieren:
               <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">tools.google.com/dlpage/gaoptout</a>.<br>
               Datenschutzerklärung Google:

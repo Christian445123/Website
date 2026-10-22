@@ -1,0 +1,18 @@
+# Nur relevant, falls die Seite hinter nginx (z. B. CloudPanel) läuft –
+# dort wird .htaccess IGNORIERT. Diese Regeln in den server{}-Block der Seite
+# übernehmen (vor die PHP-location) und nginx neu laden.
+
+# Dotfiles (.env, .git, .gitignore …) nie ausliefern
+location ~ /\.(?!well-known) { deny all; return 404; }
+
+# Interne Verzeichnisse und Konfigurationsdateien
+location ~ ^/(includes|tmp|sql|vendor)/ { deny all; return 404; }
+location ~* \.(env|sql|log|bak|old|key|pem|md|lock)$ { deny all; return 404; }
+location ~* ^/(composer\.(json|lock)|encrypt_env\.php|LastChange\.txt|nginx-security\.conf\.example)$ { deny all; return 404; }
+location = /assets/images/hashes.json { deny all; return 404; }
+
+# Saubere URLs ohne .php  (/login -> /login.php)
+location / { try_files $uri $uri/ $uri.php$is_args$args; }
+
+# PHP-Version nicht verraten:  fastcgi_hide_header X-Powered-By;
+# In php.ini:  expose_php = Off
