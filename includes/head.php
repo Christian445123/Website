@@ -1,8 +1,9 @@
 <?php
 // Ausgabe puffern: Seiten leiten nach POST per header('Location') weiter bzw. rotieren die
 // Session-ID, nachdem head.php schon HTML geschrieben hat. Ohne Puffer würde das scheitern.
+require_once __DIR__ . '/i18n.php'; // Sprachwahl (?lang=) – leitet ggf. um
 if (ob_get_level() === 0) {
-    ob_start();
+    ob_start('cg_i18n_filter'); // übersetzt die Ausgabe bei Sprache EN
 }
 
 // Boot order: security → env → db → logger → rate_limit → auth
@@ -25,7 +26,7 @@ $assetVer = static function (string $path): string {
 };
 ?>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="<?= e(cg_lang()) ?>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
@@ -41,6 +42,8 @@ $assetVer = static function (string $path): string {
   <meta property="og:description" content="<?= e($pageDescription) ?>">
   <meta property="og:image" content="https://chrisgaming.at/assets/images/cg-logo-neu.png-800x800.png">
   <link rel="icon" href="/assets/images/cg-logo-neu.png-496x496.png" type="image/png">
+  <link rel="alternate" hreflang="de" href="<?= e(cg_lang_url('de')) ?>">
+  <link rel="alternate" hreflang="en" href="<?= e(cg_lang_url('en')) ?>">
   <title><?= e($pageTitle) ?> | Chris_Gaming445</title>
 
   <!-- Bootstrap -->

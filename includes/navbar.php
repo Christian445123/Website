@@ -96,6 +96,7 @@ function cg_logout_button(string $class = 'cg-btn-login', string $extra = ''): s
             <li><a class="dropdown-item cg-dropdown-item" href="/admin/announcements.php"><i class="fas fa-newspaper me-2"></i>Ankündigungen</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item cg-dropdown-item" href="/admin/logs.php"><i class="fas fa-scroll me-2"></i>Activity Log</a></li>
+            <li><a class="dropdown-item cg-dropdown-item" href="/admin/deploy.php"><i class="fas fa-code-branch me-2"></i>Entwicklung (GitHub)</a></li>
           </ul>
         </li>
         <?php endif; ?>
@@ -172,6 +173,7 @@ function cg_logout_button(string $class = 'cg-btn-login', string $extra = ''): s
       <li class="nav-item"><a class="cg-nav-link" href="/admin/projects.php"><i class="fas fa-folder-open me-1"></i>Projekte verwalten</a></li>
       <li class="nav-item"><a class="cg-nav-link" href="/admin/announcements.php"><i class="fas fa-newspaper me-1"></i>Ankündigungen</a></li>
       <li class="nav-item"><a class="cg-nav-link" href="/admin/logs.php"><i class="fas fa-scroll me-1"></i>Activity Log</a></li>
+      <li class="nav-item"><a class="cg-nav-link" href="/admin/deploy.php"><i class="fas fa-code-branch me-1"></i>Entwicklung (GitHub)</a></li>
       <?php endif; ?>
       <?php endif; ?>
     </ul>

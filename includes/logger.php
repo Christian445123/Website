@@ -50,6 +50,7 @@ const LOG_ACCESS_DENIED        = 'access.denied';
 const LOG_SESSION_EXPIRED      = 'session.expired';
 
 // ── Admin – Benutzerverwaltung ──────────────────────────────────
+const LOG_ADMIN_DEPLOY         = 'admin.deploy';
 const LOG_ADMIN_USER_ACTIVATED   = 'admin.user.activated';
 const LOG_ADMIN_USER_DEACTIVATED = 'admin.user.deactivated';
 const LOG_ADMIN_USER_ROLE        = 'admin.user.role_changed';
@@ -134,6 +135,8 @@ function cg_log_meta(string $event): array
             => ['level' => 'info',     'color' => 0xCC5DE8, 'emoji' => '🆕', 'label' => 'Neuer Benutzer registriert'],
 
         // ── Admin Aktionen (blau) ──────────────────────────────
+        $event === LOG_ADMIN_DEPLOY
+            => ['level' => 'warning',  'color' => 0xFAB005, 'emoji' => '🚀', 'label' => 'Admin: Update von GitHub eingespielt'],
         $event === LOG_ADMIN_USER_ACTIVATED
             => ['level' => 'info',     'color' => 0x5865F2, 'emoji' => '🔓', 'label' => 'Admin: Benutzer aktiviert'],
         $event === LOG_ADMIN_USER_DEACTIVATED
