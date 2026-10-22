@@ -1,0 +1,15 @@
+-- Neue, leere Datenbank + Benutzer anlegen (als MariaDB-/MySQL-root ausführen):
+--   mysql -u root -p < scripts/db_create.sql.example
+-- VORHER 'HIER_STARKES_PASSWORT' ersetzen und dieselben Werte in die .env eintragen
+-- (DB_NAME, DB_USER, DB_PASS, DB_HOST, DB_PORT). Danach: php scripts/migrate.php
+
+CREATE DATABASE IF NOT EXISTS `chrisgaming`
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE USER IF NOT EXISTS 'chrisgaming'@'localhost' IDENTIFIED BY 'HIER_STARKES_PASSWORT';
+
+-- Rechte für den laufenden Betrieb; CREATE/ALTER/INDEX werden nur für die automatische
+-- Schema-Anlage benötigt (db_migrate). Nach dem ersten Lauf kann man sie wieder entziehen:
+--   REVOKE CREATE, ALTER, INDEX, DROP ON `chrisgaming`.* FROM 'chrisgaming'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX ON `chrisgaming`.* TO 'chrisgaming'@'localhost';
+FLUSH PRIVILEGES;
