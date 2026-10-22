@@ -17,3 +17,5 @@ encrypt_env.php
 
 # DeepL-Key (nur lokal, nie committen)
 .deepl_key
+
+.env
