@@ -29,6 +29,15 @@ function cg_i18n_segment_regex(): string
     return '#>((?>[^<]+|</?(?:' . $in . ')\b[^>]*>)+)(?=<)#';
 }
 
+/**
+ * Normalisiert ein Segment für den Abgleich: Zeilenumbrüche (CRLF/LF) und Leerraum-Folgen
+ * werden zu einem Leerzeichen. So passen Schlüssel unabhängig vom Betriebssystem/Einrückung.
+ */
+function cg_i18n_norm(string $s): string
+{
+    return trim((string) preg_replace('/\s+/u', ' ', $s));
+}
+
 function cg_lang(): string
 {
     static $lang = null;
@@ -106,7 +115,7 @@ function cg_i18n_filter(string $html): string
     // 1) Textsegmente (Text + Inline-Tags) – Leerraum außen bleibt erhalten
     $html = preg_replace_callback(cg_i18n_segment_regex(), static function (array $m) use ($map): string {
         $raw  = $m[1];
-        $trim = trim($raw);
+        $trim = cg_i18n_norm($raw);
         if ($trim === '' || !isset($map[$trim])) {
             return $m[0];
         }
@@ -117,7 +126,8 @@ function cg_i18n_filter(string $html): string
 
     // 2) Attribute
     $html = preg_replace_callback('#\b(placeholder|alt|title|aria-label|content)="([^"]*)"#', static function (array $m) use ($map): string {
-        return isset($map[$m[2]]) ? $m[1] . '="' . $map[$m[2]] . '"' : $m[0];
+        $k = cg_i18n_norm($m[2]);
+        return isset($map[$k]) ? $m[1] . '="' . $map[$k] . '"' : $m[0];
     }, $html) ?? $html;
 
     // 3) <html lang>

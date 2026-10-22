@@ -68,7 +68,7 @@ foreach ($pages as $p) {
 
     if (preg_match_all(cg_i18n_segment_regex(), $clean, $m)) {
         foreach ($m[1] as $seg) {
-            $seg = trim($seg);
+            $seg = cg_i18n_norm($seg);
             if ($seg !== '' && has_text($seg)) {
                 $candidates[$seg] = true;
             }
@@ -77,13 +77,13 @@ foreach ($pages as $p) {
     if (preg_match_all('#\b(?:placeholder|alt|title|aria-label)="([^"]+)"#', $clean, $m)) {
         foreach ($m[1] as $v) {
             if (has_text($v)) {
-                $candidates[$v] = true;
+                $candidates[cg_i18n_norm($v)] = true;
             }
         }
     }
     if (preg_match_all('#<meta\s+(?:name="description"|property="og:(?:title|description)")\s+(?:property="[^"]*"\s+)?content="([^"]+)"#', $clean, $m)) {
         foreach ($m[1] as $v) {
-            $candidates[$v] = true;
+            $candidates[cg_i18n_norm($v)] = true;
         }
     }
     echo "gelesen: $p\n";
@@ -101,7 +101,10 @@ foreach ($messages as $msg) {
 
 // ── 3) Vorhandene Übersetzungen weiterverwenden ───────────────────
 $file = $root . '/lang/en.php';
-$map  = is_file($file) ? (array) require $file : [];
+$map  = [];
+foreach (is_file($file) ? (array) require $file : [] as $k => $v) {
+    $map[cg_i18n_norm((string) $k)] = $v; // alte Schlüssel auf das normalisierte Format migrieren
+}
 $todo = array_values(array_filter(array_keys($candidates), static fn($k) => !array_key_exists($k, $map)));
 echo count($candidates) . ' Segmente, ' . count($todo) . " neu zu übersetzen\n";
 
