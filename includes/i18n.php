@@ -15,6 +15,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/security.php'; // cg_safe_redirect()
+
 const CG_LANGS = ['de', 'en'];
 
 /** Inline-Tags, die zu einem Textsegment gehören (alles andere trennt Segmente). */

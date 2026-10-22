@@ -26,7 +26,7 @@
 # ── Block access to internal directories ─────
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^(includes|tmp|sql|vendor|\.git)(/|$) - [F,L]
+    RewriteRule ^(includes|tmp|sql|vendor|scripts|lang|\.git)(/|$) - [F,L]
     RewriteRule (^|/)\.(?!well-known/) - [F,L]
 </IfModule>
 

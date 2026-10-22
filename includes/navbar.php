@@ -101,6 +101,12 @@ function cg_logout_button(string $class = 'cg-btn-login', string $extra = ''): s
         </li>
         <?php endif; ?>
         <?php endif; ?>
+        <li class="nav-item ms-1">
+          <div class="cg-lang" role="group" aria-label="Sprache / Language">
+  <a href="<?= e(cg_lang_url('de')) ?>" hreflang="de" lang="de" class="<?= cg_lang() === 'de' ? 'active' : '' ?>">DE</a>
+  <a href="<?= e(cg_lang_url('en')) ?>" hreflang="en" lang="en" class="<?= cg_lang() === 'en' ? 'active' : '' ?>">EN</a>
+</div>
+        </li>
         <!-- Login / User -->
         <li class="nav-item ms-1">
           <?php if ($navLoggedIn): ?>
@@ -179,6 +185,10 @@ function cg_logout_button(string $class = 'cg-btn-login', string $extra = ''): s
     </ul>
 
     <div class="mt-auto">
+      <div class="mb-3"><div class="cg-lang" role="group" aria-label="Sprache / Language">
+  <a href="<?= e(cg_lang_url('de')) ?>" hreflang="de" lang="de" class="<?= cg_lang() === 'de' ? 'active' : '' ?>">DE</a>
+  <a href="<?= e(cg_lang_url('en')) ?>" hreflang="en" lang="en" class="<?= cg_lang() === 'en' ? 'active' : '' ?>">EN</a>
+</div></div>
       <!-- Login / User (Mobile) -->
       <div class="mb-3">
         <?php if ($navLoggedIn): ?>

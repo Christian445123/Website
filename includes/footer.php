@@ -62,7 +62,7 @@
     <hr class="cg-footer-divider">
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-      <p class="cg-footer-copy mb-0">&copy; <?= date('Y') ?> Chris_Gaming445. Alle Rechte vorbehalten.</p>
+      <p class="cg-footer-copy mb-0">&copy; <bdi><?= date('Y') ?></bdi><bdi> Chris_Gaming445. Alle Rechte vorbehalten.</bdi></p>
       <div class="d-flex flex-wrap gap-3">
         <a href="/hinweise.php"    class="cg-footer-copy cg-footer-mini">Hinweise</a>
         <a href="/impressum.php"   class="cg-footer-copy cg-footer-mini">Impressum</a>

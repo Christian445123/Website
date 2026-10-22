@@ -50,7 +50,7 @@ if ($pdo !== null) {
     <div class="container">
       <span class="cg-section-label">Mitgliederbereich</span>
       <h1 class="mt-2">Dashboard</h1>
-      <p>Willkommen zurück, <strong class="cg-red"><?= e($user['username']) ?></strong>!</p>
+      <p><bdi>Willkommen zurück,</bdi> <strong class="cg-red"><?= e($user['username']) ?></strong><bdi>!</bdi></p>
     </div>
   </section>
 

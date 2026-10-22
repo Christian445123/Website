@@ -87,8 +87,8 @@ if ($token !== '' && strlen($token) === 64 && ctype_xdigit($token)) {
       </div>
       <h1 class="cg-login-title mt-3">E-Mail bestätigt!</h1>
       <p class="cg-text-muted" style="margin:.5rem 0 1.5rem;">
-        Dein Account <strong style="color:var(--cg-text);"><?= e($username) ?></strong>
-        ist jetzt aktiv. Du kannst dich jetzt einloggen.
+        <bdi>Dein Account</bdi> <strong style="color:var(--cg-text);"><?= e($username) ?></strong>
+        <bdi>ist jetzt aktiv. Du kannst dich jetzt einloggen.</bdi>
       </p>
       <a href="/login.php" class="cg-login-btn text-decoration-none">
         <i class="fas fa-arrow-right-to-bracket me-2"></i>Jetzt einloggen
@@ -101,9 +101,9 @@ if ($token !== '' && strlen($token) === 64 && ctype_xdigit($token)) {
       </div>
       <h1 class="cg-login-title mt-3">Bereits bestätigt</h1>
       <p class="cg-text-muted" style="margin:.5rem 0 1.5rem;">
-        Die E-Mail-Adresse für
+        <bdi>Die E-Mail-Adresse für</bdi>
         <strong style="color:var(--cg-text);"><?= e($username) ?></strong>
-        wurde bereits verifiziert.
+        <bdi>wurde bereits verifiziert.</bdi>
       </p>
       <a href="/login.php" class="cg-login-btn text-decoration-none">
         <i class="fas fa-arrow-right-to-bracket me-2"></i>Zum Login

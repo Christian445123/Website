@@ -42,7 +42,9 @@ require_once __DIR__ . '/includes/head.php';
               Session-Cookies ein, die nach dem Schließen des Browsers automatisch gelöscht werden.
               Sie dienen dem Betrieb des Login-Systems und erfordern keine Einwilligung
               (Art. 6 Abs. 1 lit. b DSGVO). Zusätzlich speichert Ihr Browser Ihre Cookie-Auswahl
-              lokal (localStorage), damit der Hinweis nicht bei jedem Besuch erscheint.<br><br>
+              lokal (localStorage), damit der Hinweis nicht bei jedem Besuch erscheint. Wenn Sie die
+              Sprache umschalten, wird dies in einem technisch notwendigen Cookie („cg_lang“, 1 Jahr)
+              gespeichert.<br><br>
               Schriftarten und Icons werden von unserem eigenen Server ausgeliefert; dabei wird
               keine Verbindung zu Google- oder CDN-Servern aufgebaut.
             </p>

@@ -442,6 +442,19 @@ main { padding-top: 0; }
   font-size: .9rem;
 }
 
+/* Sprachumschalter */
+.cg-lang { display: inline-flex; border: 1px solid var(--cg-border-strong); border-radius: var(--cg-radius-sm); overflow: hidden; }
+.cg-lang a {
+  padding: .38rem .65rem;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--cg-muted);
+  background: transparent;
+}
+.cg-lang a:hover { color: #fff; background: rgba(255,255,255,.07); }
+.cg-lang a.active { color: #fff; background: var(--cg-red); }
+
 /* Social icons */
 .cg-social-icons a {
   display: inline-flex;

@@ -6,7 +6,7 @@
 location ~ /\.(?!well-known) { deny all; return 404; }
 
 # Interne Verzeichnisse und Konfigurationsdateien
-location ~ ^/(includes|tmp|sql|vendor)/ { deny all; return 404; }
+location ~ ^/(includes|tmp|sql|vendor|scripts|lang)/ { deny all; return 404; }
 location ~* \.(env|sql|log|bak|old|key|pem|md|lock)$ { deny all; return 404; }
 location ~* ^/(composer\.(json|lock)|encrypt_env\.php|LastChange\.txt|nginx-security\.conf\.example)$ { deny all; return 404; }
 location = /assets/images/hashes.json { deny all; return 404; }

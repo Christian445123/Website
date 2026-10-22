@@ -80,6 +80,13 @@
   });
 
   /* ── Cookie-Einwilligung + Google Analytics (opt-in) ──────── */
+  const L = (document.documentElement.lang === 'en') ? {
+    text: 'We use technically necessary cookies for the login. With your consent we also use Google Analytics to improve the site. Details in the ',
+    link: 'privacy policy', deny: 'Necessary only', allow: 'Accept all', label: 'Cookie settings'
+  } : {
+    text: 'Wir nutzen technisch notwendige Cookies für den Login. Mit deiner Zustimmung setzen wir zusätzlich Google Analytics ein, um die Seite zu verbessern. Details in der ',
+    link: 'Datenschutzerklärung', deny: 'Nur notwendige', allow: 'Alle akzeptieren', label: 'Cookie-Einstellungen'
+  };
   const GA_ID = 'G-Q5C4N8B4VQ';
   const KEY   = 'cg_consent_v1';
 
@@ -113,14 +120,13 @@
     box.className = 'cg-consent';
     box.setAttribute('role', 'dialog');
     box.setAttribute('aria-live', 'polite');
-    box.setAttribute('aria-label', 'Cookie-Einstellungen');
+    box.setAttribute('aria-label', L.label);
 
     const text = document.createElement('p');
-    text.append('Wir nutzen technisch notwendige Cookies für den Login. Mit deiner Zustimmung setzen wir zusätzlich ' +
-      'Google Analytics ein, um die Seite zu verbessern. Details in der ');
+    text.append(L.text);
     const link = document.createElement('a');
     link.href = '/datenschutz.php';
-    link.textContent = 'Datenschutzerklärung';
+    link.textContent = L.link;
     text.append(link, '.');
 
     const actions = document.createElement('div');
@@ -129,13 +135,13 @@
     const deny = document.createElement('button');
     deny.type = 'button';
     deny.className = 'cg-btn cg-btn-outline';
-    deny.textContent = 'Nur notwendige';
+    deny.textContent = L.deny;
     deny.addEventListener('click', () => { store.set('denied'); closeBanner(); });
 
     const allow = document.createElement('button');
     allow.type = 'button';
     allow.className = 'cg-btn cg-btn-primary';
-    allow.textContent = 'Alle akzeptieren';
+    allow.textContent = L.allow;
     allow.addEventListener('click', () => { store.set('granted'); closeBanner(); loadAnalytics(); });
 
     actions.append(deny, allow);

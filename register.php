@@ -50,9 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <!-- ── Success: Zugangsdaten gehen NUR per E-Mail raus ── -->
       <div class="cg-login-success" role="alert">
         <i class="fas fa-envelope-circle-check me-2"></i>
-        Wenn die Adresse <strong><?= e($registered['email']) ?></strong> noch nicht registriert war,
-        haben wir dir jetzt eine E-Mail mit deinen Zugangsdaten und einem Bestätigungslink geschickt.
-        Der Link ist 24&nbsp;Stunden gültig.
+        <div>Wenn die folgende Adresse noch nicht registriert war, haben wir dir jetzt eine E-Mail mit deinen Zugangsdaten und einem Bestätigungslink geschickt. Der Link ist 24 Stunden gültig.</div>
+        <div class="mt-2"><strong><?= e($registered['email']) ?></strong></div>
       </div>
       <p class="cg-text-muted" style="font-size:.85rem;">
         <i class="fas fa-circle-info me-1"></i>
